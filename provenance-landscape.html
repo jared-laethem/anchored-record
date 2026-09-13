@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Provenance Landscape</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F6F6F2;
+    --surface: #FFFFFF;
+    --ink: #232823;
+    --muted: #5C635A;
+    --line: #DBDED3;
+    --accent: #23684B;
+    --accent-soft: #E4EEE7;
+    --bronze: #8A6B33;
+    --bronze-soft: #F1EADB;
+    --code-bg: #EDEEE6;
+    --danger: #9A3B2E;
+    --danger-soft: #F3E4E0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161915;
+      --surface: #1D211C;
+      --ink: #E6E5DC;
+      --muted: #9BA294;
+      --line: #333831;
+      --accent: #5BBB8C;
+      --accent-soft: #1E2C24;
+      --bronze: #CDA45F;
+      --bronze-soft: #2A2519;
+      --code-bg: #22261F;
+      --danger: #D07A6B;
+      --danger-soft: #2E1F1C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161915;
+    --surface: #1D211C;
+    --ink: #E6E5DC;
+    --muted: #9BA294;
+    --line: #333831;
+    --accent: #5BBB8C;
+    --accent-soft: #1E2C24;
+    --bronze: #CDA45F;
+    --bronze-soft: #2A2519;
+    --code-bg: #22261F;
+    --danger: #D07A6B;
+    --danger-soft: #2E1F1C;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Newsreader", Georgia, "Times New Roman", serif;
+    font-size: 1.125rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 47rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+
+  h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.4rem); font-weight: 600; letter-spacing: -0.01em; }
+  h2 { font-size: 1.7rem; font-weight: 600; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 1.25rem; font-weight: 600; }
+  p { margin: 0; }
+  a { color: var(--accent); }
+  strong { font-weight: 600; }
+
+  .eyebrow {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .doc-header { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
+  .doc-header .subtitle { font-size: 1.3rem; font-style: italic; color: var(--muted); max-width: 40rem; }
+  .doc-meta {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.78rem; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem;
+    padding-top: 1rem; border-top: 1px solid var(--line);
+  }
+
+  section { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 3.8rem; }
+  .section-label { margin-bottom: -0.6rem; }
+  section > h3 { margin-top: 0.8rem; }
+
+  ul, ol.body-list { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  li::marker { color: var(--accent); }
+
+  .verdict {
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    padding: 1.3rem 1.6rem;
+    font-size: 1.15rem;
+    display: flex; flex-direction: column; gap: 0.8rem;
+  }
+  .verdict .claim-label {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .aside {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--bronze);
+    padding: 1.1rem 1.4rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .aside .aside-label {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--bronze);
+  }
+  .aside p { font-size: 1.02rem; }
+  .aside.grave { border-left-color: var(--danger); }
+  .aside.grave .aside-label { color: var(--danger); }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; margin-top: 0.4rem; }
+  .tl-row {
+    display: grid; grid-template-columns: 5.2rem 1fr; gap: 1.1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 1.02rem;
+  }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-year {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.82rem; font-weight: 700;
+    color: var(--bronze);
+    padding-top: 0.2rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-dead { color: var(--danger); }
+  .tl-dead-note { color: var(--danger); font-style: italic; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  th {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    text-align: left; color: var(--muted);
+    padding: 0.65rem 0.8rem;
+    border-bottom: 1.5px solid var(--line);
+  }
+  td { padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.sys { font-weight: 600; white-space: nowrap; }
+  td.sys .sub { display: block; font-weight: 400; font-size: 0.8rem; color: var(--muted); }
+  td.c { text-align: center; font-family: "Archivo", system-ui, sans-serif; font-size: 0.9rem; white-space: nowrap; }
+  .y { color: var(--accent); font-weight: 700; }
+  .p { color: var(--bronze); font-weight: 700; }
+  .n { color: var(--muted); }
+  .dead { color: var(--danger); font-weight: 700; }
+  .legend {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.78rem; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem;
+  }
+  .legend .y, .legend .p, .legend .n, .legend .dead { font-size: 0.9rem; }
+
+  figure { margin: 0.8rem 0 0.4rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .fig-frame { background: var(--surface); border: 1px solid var(--line); padding: 1.2rem; overflow-x: auto; }
+  figure svg { display: block; max-width: 100%; height: auto; min-width: 560px; margin: 0 auto; }
+  figcaption { font-size: 0.95rem; color: var(--muted); font-style: italic; padding: 0 0.3rem; }
+  figcaption .fig-n {
+    font-family: "Archivo", system-ui, sans-serif; font-style: normal;
+    font-weight: 600; font-size: 0.72rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--bronze); margin-right: 0.5rem;
+  }
+  .d-text { font-family: "Archivo", system-ui, sans-serif; font-size: 12px; fill: currentColor; }
+  .d-text-sm { font-family: "Archivo", system-ui, sans-serif; font-size: 10.5px; fill: var(--muted); }
+  .d-accent-t { fill: var(--accent); }
+  .d-bronze-t { fill: var(--bronze); }
+  .d-danger-t { fill: var(--danger); }
+
+  .footnote { font-size: 0.95rem; color: var(--muted); }
+</style>
+
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">Prior-Art Survey · Companion to the Anchored Record design document</p>
+    <h1>The Provenance Landscape</h1>
+    <p class="subtitle">Thirty-five years of attempts to make digital evidence permanent — what exists, what died, and precisely where the unclaimed territory lies.</p>
+    <div class="doc-meta">
+      <span>September 2026</span>
+      <span>Compiled from four parallel research tracks; claims dated and linked</span>
+    </div>
+  </header>
+
+  <section id="verdict">
+    <p class="eyebrow section-label">Section 1</p>
+    <h2>The verdict, up front</h2>
+    <div class="verdict">
+      <span class="claim-label">One-paragraph summary</span>
+      <p>The anchoring plumbing is a solved problem — free, proven at 750-million-file scale, still running. The capture-time provenance layer is being built by a well-funded industry coalition (C2PA), imperfectly. But the thing the Anchored Record actually proposes — a <strong>public, consortium-governed registry of institutional attestations over the historical record, anchored for permanence</strong> — does not exist anywhere. It has been attempted exactly once, by five national archives (ARCHANGEL, 2017–19); the trial succeeded technically and dissolved organizationally. Every commercial attempt at adjacent territory is dead or dying, for governance and business-model reasons, never cryptographic ones. The gap is real, the mechanism is validated, and the entire difficulty lives in institutions, not technology.</p>
+    </div>
+    <p>Three findings frame everything below:</p>
+    <ul>
+      <li><strong>Don't rebuild the rails.</strong> OpenTimestamps has offered free Merkle-batched Bitcoin anchoring since 2016; Starling Lab has open-source tooling for hash-level institutional attestations. The registry should stand on these, not replace them.</li>
+      <li><strong>The graveyard is a governance graveyard.</strong> Surety, Guardtime, Stampery, Tierion, Factom, DPN, ACE, ARCHANGEL — the failures cluster entirely around sustainability and stewardship. Proofs outlived every one of their operators. Design accordingly.</li>
+      <li><strong>The window is institutional as well as temporal.</strong> The Library of Congress convened a libraries/archives/museums provenance community in July 2025, and EU law created a legal category for exactly this kind of ledger in 2024. The convening moment for our consortium is now, not hypothetical.</li>
+    </ul>
+  </section>
+
+  <section id="history">
+    <p class="eyebrow section-label">Section 2</p>
+    <h2>Thirty-five years of the idea</h2>
+    <p>The Anchored Record is not a new idea — it is the latest attempt at an old one. Knowing the lineage matters, because funders and archive directors will have seen pieces of it before. Entries in <span class="tl-dead-note">red</span> no longer operate.</p>
+    <div class="timeline">
+      <div class="tl-row"><span class="tl-year">1991</span><p>Haber &amp; Stornetta publish the founding paper on hash-chain timestamping — the design Bitcoin later builds on.</p></div>
+      <div class="tl-row"><span class="tl-year">1995</span><p><a href="https://www.vice.com/en/article/what-was-the-first-blockchain/">Surety</a> begins publishing weekly hash digests as classified ads in the Sunday <em>New York Times</em> — "the world's oldest blockchain." Still cryptographically valid; the company's website now flickers in and out of existence.</p></div>
+      <div class="tl-row"><span class="tl-year tl-dead">2007</span><p><a href="https://wiki.umiacs.umd.edu/adapt/index.php/Ace:Main">ACE</a> (U. Maryland): the archival world's only externally verifiable integrity scheme — Merkle-tree "witness values" published publicly. Now a zombie: last code 2021, witness feed apparently dormant since late 2024.</p></div>
+      <div class="tl-row"><span class="tl-year">2012</span><p>Estonia puts <a href="https://e-estonia.com/wp-content/uploads/faq_ksi_blockchain.pdf">Guardtime's KSI</a> hash calendar into production for national registries (health, land, courts) — proof this works at nation scale. The company collapsed to roughly one employee by 2026; who operates KSI now is publicly unclear.</p></div>
+      <div class="tl-row"><span class="tl-year">2016</span><p>Peter Todd launches <a href="https://petertodd.org/2016/opentimestamps-announcement">OpenTimestamps</a>: free, unlimited-scale Bitcoin anchoring via Merkle-aggregating calendar servers. Still running in 2026 — on essentially one maintainer and donations.</p></div>
+      <div class="tl-row"><span class="tl-year">2017</span><p>Todd timestamps <a href="https://petertodd.org/2017/carbon-dating-the-internet-archive-with-opentimestamps">~750 million Internet Archive files in a single Bitcoin transaction</a> — the largest retroactive proof over a historical corpus ever made. A one-off demonstration; the Internet Archive never operationalized it.</p></div>
+      <div class="tl-row"><span class="tl-year tl-dead">2017–19</span><p><a href="https://www.surrey.ac.uk/news/archangel-securing-our-national-archives-ai-and-blockchain">ARCHANGEL</a>: a proof-of-authority blockchain jointly operated by the national archives of the UK, Estonia, Norway, Australia, and the US — each underwriting the others' records. Our architecture, almost exactly. It ended as a feasibility study; its lead researcher now works on C2PA at Adobe.</p></div>
+      <div class="tl-row"><span class="tl-year tl-dead">2018</span><p>DPN, the US inter-institutional preservation network, <a href="https://www.tdl.org/2018/12/the-digital-preservation-network-dpn-to-cease-operations/">shuts down</a> — membership economics, not technology.</p></div>
+      <div class="tl-row"><span class="tl-year tl-dead">2019–20</span><p>The <a href="https://www.niemanlab.org/2020/01/heres-how-the-new-york-times-tested-blockchain-to-help-you-identify-faked-photos-on-your-timeline/">New York Times News Provenance Project</a> tests blockchain photo provenance, publishes findings, and pivots to the Content Authenticity Initiative. Blockchain never productionized.</p></div>
+      <div class="tl-row"><span class="tl-year">2021</span><p>C2PA coalition founded (Adobe, Microsoft, BBC, Intel…). <a href="https://www.starlinglab.org/">Starling Lab</a> launches at Stanford/USC — the closest living relative of our project.</p></div>
+      <div class="tl-row"><span class="tl-year">2022</span><p>Starling + Hala Systems file the <a href="https://sfi.usc.edu/news/2022/06/33571-starling-lab-and-hala-systems-file-cryptographic-submission-evidence-war-crimes">first cryptographically anchored evidence submission to the International Criminal Court</a> (Kharkiv school attacks) — hashes on seven blockchains.</p></div>
+      <div class="tl-row"><span class="tl-year">2024</span><p><a href="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401183">eIDAS 2.0</a> (EU) creates "qualified electronic ledgers" — a legal presumption of chronological accuracy and integrity for consortium ledgers run to standard. First-ever regulatory template for our architecture.</p></div>
+      <div class="tl-row"><span class="tl-year">2025</span><p>The <a href="https://blogs.loc.gov/thesignal/2026/04/content-authenticity-and-provenance-in-the-age-of-artificial-intelligence-a-call-to-action-for-the-libraries-archives-and-museums-community/">Library of Congress convenes a C2PA community of practice for libraries, archives &amp; museums</a>; its Feb 2026 white paper calls on the sector to make collections verifiable in the AI era. Appetite without infrastructure.</p></div>
+      <div class="tl-row"><span class="tl-year">2026</span><p>Nobody yet combines mass ingestion + institutional attestation + open governance + permanence. No 9/11 archive has been cryptographically authenticated by anyone.</p></div>
+    </div>
+  </section>
+
+  <section id="matrix">
+    <p class="eyebrow section-label">Section 3</p>
+    <h2>Capability matrix</h2>
+    <p>Every significant system in the space, scored against the five properties the Anchored Record needs. The pattern to notice: <strong>plenty of marks in the first column, almost none in the last three — and no row fills them all.</strong></p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>System</th>
+            <th>Public anchoring</th>
+            <th>Attestation &amp; metadata</th>
+            <th>Retroactive / historical</th>
+            <th>Mass scale</th>
+            <th>Multi-institution governance</th>
+            <th>Status 2026</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="sys">OpenTimestamps<span class="sub">free Bitcoin anchoring</span></td><td class="c y">●</td><td class="c n">○</td><td class="c p">◐</td><td class="c y">●</td><td class="c n">○</td><td class="c">alive, 1 maintainer</td></tr>
+          <tr><td class="sys">Surety<span class="sub">NYT classified-ad notary</span></td><td class="c y">●</td><td class="c n">○</td><td class="c n">○</td><td class="c n">○</td><td class="c n">○</td><td class="c dead">flickering</td></tr>
+          <tr><td class="sys">Guardtime KSI<span class="sub">Estonia's national ledger</span></td><td class="c p">◐</td><td class="c n">○</td><td class="c n">○</td><td class="c y">●</td><td class="c n">○</td><td class="c dead">~1 employee</td></tr>
+          <tr><td class="sys">Timestamping startups<span class="sub">Stampery, Tierion, Factom…</span></td><td class="c y">●</td><td class="c p">◐</td><td class="c n">○</td><td class="c n">○</td><td class="c n">○</td><td class="c dead">graveyard</td></tr>
+          <tr><td class="sys">RFC 3161 / eIDAS TSAs<span class="sub">legal timestamping authorities</span></td><td class="c p">◐</td><td class="c n">○</td><td class="c n">○</td><td class="c y">●</td><td class="c p">◐</td><td class="c">alive, regulated</td></tr>
+          <tr><td class="sys">C2PA / Content Credentials<span class="sub">capture-time provenance</span></td><td class="c n">○</td><td class="c p">◐</td><td class="c n">○</td><td class="c p">◐</td><td class="c p">◐</td><td class="c">growing, shaky</td></tr>
+          <tr><td class="sys">Adobe durable credentials<span class="sub">manifest recovery cloud</span></td><td class="c n">○</td><td class="c p">◐</td><td class="c n">○</td><td class="c p">◐</td><td class="c n">○</td><td class="c">one company</td></tr>
+          <tr><td class="sys">Numbers Protocol<span class="sub">commercial capture-to-chain</span></td><td class="c y">●</td><td class="c p">◐</td><td class="c n">○</td><td class="c p">◐</td><td class="c n">○</td><td class="c">alive, commercial</td></tr>
+          <tr><td class="sys">Starling Lab<span class="sub">evidence-grade case studies</span></td><td class="c y">●</td><td class="c y">●</td><td class="c y">●</td><td class="c n">○</td><td class="c p">◐</td><td class="c">alive, grant-funded</td></tr>
+          <tr><td class="sys">eyeWitness / ProofMode<span class="sub">human-rights capture apps</span></td><td class="c p">◐</td><td class="c y">●</td><td class="c n">○</td><td class="c p">◐</td><td class="c n">○</td><td class="c">alive, niche</td></tr>
+          <tr><td class="sys">LOCKSS / CLOCKSS<span class="sub">library preservation networks</span></td><td class="c n">○</td><td class="c n">○</td><td class="c y">●</td><td class="c y">●</td><td class="c y">●</td><td class="c">alive, 25+ yrs</td></tr>
+          <tr><td class="sys">Internet Archive<span class="sub">published but unsigned hashes</span></td><td class="c n">○</td><td class="c n">○</td><td class="c y">●</td><td class="c y">●</td><td class="c n">○</td><td class="c">alive, embattled</td></tr>
+          <tr><td class="sys">ACE (U. Maryland)<span class="sub">Merkle witness values</span></td><td class="c y">●</td><td class="c n">○</td><td class="c y">●</td><td class="c p">◐</td><td class="c n">○</td><td class="c dead">zombie</td></tr>
+          <tr><td class="sys">ARCHANGEL<span class="sub">5 national archives, PoA chain</span></td><td class="c p">◐</td><td class="c p">◐</td><td class="c y">●</td><td class="c n">○</td><td class="c y">●</td><td class="c dead">ended 2019</td></tr>
+          <tr><td class="sys">LoC G+LAM community<span class="sub">convening, no infrastructure</span></td><td class="c n">○</td><td class="c p">◐</td><td class="c y">●</td><td class="c n">○</td><td class="c y">●</td><td class="c">forming</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="legend"><span><span class="y">●</span> yes</span><span><span class="p">◐</span> partial</span><span><span class="n">○</span> no</span><span><span class="dead">red</span> = defunct or failing</span></p>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 880 360" role="img" aria-label="The Anchored Record's four layers, showing which existing systems occupy each: anchoring is solved by OpenTimestamps and Bitcoin; capture provenance is partially covered by C2PA; the attestation registry and century-scale governance layers are unoccupied.">
+          <!-- Layer bars, bottom-up stack -->
+          <!-- Layer 1: anchoring (solved) -->
+          <rect x="40" y="280" width="520" height="56" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/>
+          <text class="d-text d-accent-t" x="56" y="303" font-weight="600">Integrity layer — public anchoring</text>
+          <text class="d-text-sm" x="56" y="321">proof a file existed at date X, unaltered since</text>
+          <text class="d-text d-accent-t" x="600" y="303" font-weight="600">SOLVED</text>
+          <text class="d-text-sm" x="600" y="321">OpenTimestamps · Bitcoin/Ethereum · Starling's multi-chain anchors</text>
+
+          <!-- Layer 2: capture provenance (partial) -->
+          <rect x="40" y="204" width="520" height="56" fill="var(--bronze-soft)" stroke="var(--bronze)" stroke-width="1.4"/>
+          <text class="d-text d-bronze-t" x="56" y="227" font-weight="600">Provenance layer — capture-time signing</text>
+          <text class="d-text-sm" x="56" y="245">where new content comes from, signed at creation</text>
+          <text class="d-text d-bronze-t" x="600" y="227" font-weight="600">PARTIAL</text>
+          <text class="d-text-sm" x="600" y="245">C2PA coalition — real but stripped by platforms,</text>
+          <text class="d-text-sm" x="600" y="258">recovery centralized with Adobe; forward-only</text>
+
+          <!-- Layer 3: attestation registry (open) -->
+          <rect x="40" y="128" width="520" height="56" fill="var(--surface)" stroke="var(--danger)" stroke-width="1.6" stroke-dasharray="6 4"/>
+          <text class="d-text d-danger-t" x="56" y="151" font-weight="600">Attestation registry — institutional testimony on hashes</text>
+          <text class="d-text-sm" x="56" y="169">who vouches for the historical record, permanently &amp; publicly</text>
+          <text class="d-text d-danger-t" x="600" y="151" font-weight="600">UNBUILT</text>
+          <text class="d-text-sm" x="600" y="169">Starling has the technique at case-study scale;</text>
+          <text class="d-text-sm" x="600" y="182">no open registry exists anywhere</text>
+
+          <!-- Layer 4: governance (open) -->
+          <rect x="40" y="52" width="520" height="56" fill="var(--surface)" stroke="var(--danger)" stroke-width="1.6" stroke-dasharray="6 4"/>
+          <text class="d-text d-danger-t" x="56" y="75" font-weight="600">Century-scale governance — consortium stewardship</text>
+          <text class="d-text-sm" x="56" y="93">who keeps it alive for 100 years</text>
+          <text class="d-text d-danger-t" x="600" y="75" font-weight="600">UNBUILT</text>
+          <text class="d-text-sm" x="600" y="93">ARCHANGEL proved it feasible (5 national archives), then</text>
+          <text class="d-text-sm" x="600" y="106">dissolved; CLOCKSS governance model is the near precedent</text>
+        </svg>
+      </div>
+      <figcaption><span class="fig-n">Figure 1</span>The four layers of the Anchored Record against who occupies them today. The bottom is solved, the middle is industry-crowded, and the two layers that constitute this project's actual substance are empty.</figcaption>
+    </figure>
+  </section>
+
+  <section id="clusters">
+    <p class="eyebrow section-label">Section 4</p>
+    <h2>The four clusters, in brief</h2>
+
+    <h3>4.1 — Timestamping: solved plumbing on fragile scaffolding</h3>
+    <p><a href="https://en.wikipedia.org/wiki/OpenTimestamps">OpenTimestamps</a> is exactly the anchoring machine our design document specifies: calendar servers Merkle-aggregate unlimited submissions into roughly one Bitcoin transaction per hour, free to users, with open self-contained receipts verifiable offline forever. Todd's 2017 anchoring of ~750M Internet Archive files in one transaction proves our "mass retroactive ingestion" math in production. The caveats: it is timestamp-only by design (no metadata, identity, or attestations — receipts are the user's problem to keep), and the public infrastructure runs on donations and essentially one maintainer. A consortium running its own calendar server would inherit the design while fixing the fragility.</p>
+    <p>The rest of the cluster is instructive by its fate: <a href="https://www.pappers.fr/entreprise/woleet-819437450">Woleet went insolvent</a>, Stampery's verification portal is a dead URL (stranding every customer's proofs that depended on it), <a href="https://www.sec.gov/files/litigation/admin/2020/33-10914.pdf">Tierion settled with the SEC over its token</a>, <a href="https://www.coindesk.com/business/2020/04/02/factom-inc-faces-liquidation-after-investors-refuse-request-for-more-funding">Factom liquidated</a>, and <a href="https://www.balticvc.com/2025/01/estonian-guardtime-plans-to-lay-off.html">Guardtime — operator of Estonia's national integrity ledger for a decade — shrank to roughly one employee</a>. Even Surety, cryptographically valid across 30 years of newspaper ads, flickers as a business.</p>
+
+    <h3>4.2 — C2PA: the capture-time layer, real but leaky</h3>
+    <p>The coalition (Adobe, Google, Microsoft, OpenAI, Sony, BBC…) has shipped real hardware: Leica, Sony, and Canon cameras sign at capture; Pixel 10 phones embed credentials by default; the major AI generators label outputs; the EU AI Act mandates machine-readable AI-content marking from August 2026. But independent testing finds <a href="https://www.tbray.org/ongoing/When/202x/2025/09/18/C2PA-Investigations">essentially every social platform strips the manifests on upload</a>, and the sanctioned fix — "durable Content Credentials" — routes recovery through <a href="https://opensource.contentauthenticity.org/docs/manifest/understanding-manifest/">Adobe's cloud manifest store</a>, the only one in operation. Security is wobbly: <a href="https://petapixel.com/2025/09/22/nikon-cant-fully-solve-the-z6-iiis-c2pa-problems-alone/">Nikon revoked every authenticity certificate it ever issued</a> after a September 2025 exploit, and a <a href="https://eprint.iacr.org/2026/804">2026 formal analysis</a> concludes the spec misses its own security goals. Two structural facts matter most for us: <strong>there is no public, decentralized, permanent registry of provenance manifests</strong>, and <strong>C2PA has no model for pre-C2PA historical material</strong> — its trust is a conformance-program allowlist, with no way for arbitrary institutions to cross-vouch. Our registry would sit above C2PA, not compete with it.</p>
+
+    <h3>4.3 — The evidence-grade pioneers: right technique, case-study scale</h3>
+    <p><a href="https://www.starlinglab.org/">Starling Lab</a> (Stanford EE + USC Shoah Foundation, active through 2026, grant-funded) has validated nearly our entire stack in the field: hash-only registration across multiple chains including Bitcoin and Ethereum, institutional signatures over hashes via its open-source <a href="https://github.com/starlinglab/authenticated-attributes">Authenticated Attributes</a> database, C2PA integration, and even embryonic multi-institution corroboration ("witness servers" with Harvard's Library Innovation Lab and the Atlantic Council). Its casework is landmark-grade — the <a href="https://sfi.usc.edu/news/2022/06/33571-starling-lab-and-hala-systems-file-cryptographic-submission-evidence-war-crimes">first cryptographic ICC evidence submission</a> (Ukraine, 2022), a <a href="https://starlinglab.org/case-studies/the-first-cryptographic-archive-war-crimes-investigation/">Bosnia war-crimes archive that got a cold case reopened</a> — and its <a href="https://starlinglab.org/case-studies/preserving-history-in-the-age-of-ai-the-christopher-morris-panama-archive/">Panama Archive case study</a> states our thesis verbatim: "If you cannot prove that a piece of media existed before the AI inflection point, you can never again prove that it is real." But that flagship retro-authentication project sealed <em>131 photos</em>. Starling is depth, not breadth: curated partnerships, no open registry, no consortium governance, permanence resting on grants and Filecoin economics. It is our strongest potential ally and the clearest proof our missing layers are missing. Adjacent: <a href="https://www.eyewitness.global/eyewitness-turns-10">eyeWitness to Atrocities</a> (85,000+ vaulted items, convictions in five countries) shows capture-with-custody works legally; <a href="https://captureapp.xyz/products/c2pa-signing/">Numbers Protocol</a> shows registry mechanics commercially, as a single-operator CA.</p>
+
+    <h3>4.4 — The archival establishment: governance without proofs</h3>
+    <p>The library world solved multi-institution governance decades ago — and never produced a public proof. <a href="https://clockss.org/">LOCKSS/CLOCKSS</a> run peer-audited replication across ~80 libraries and 12 archive nodes with a genuinely balanced governance board, but the integrity polling is entirely internal and CLOCKSS is a dark archive. The <a href="https://archive.org/developers/metadata.html">Internet Archive publishes per-file hashes</a> — unsigned, unanchored, self-reported — and authenticates for courts with a human affidavit; the Fifth Circuit <a href="https://law.justia.com/cases/federal/appellate-courts/ca5/20-30568/20-30568-2022-01-20.html">ruled in 2022</a> that Wayback captures are not self-authenticating ("a private internet archive falls short of being a source whose accuracy cannot reasonably be questioned") — a court literally naming the gap our registry fills. Preservation standards (OAIS, ISO 16363, BagIt, NDSA levels) all stop at internal fixity: the custodian checks its own checksums. The single exception, <a href="https://wiki.umiacs.umd.edu/adapt/index.php/Ace:Main">ACE's publicly witnessed Merkle summaries</a>, is now a zombie for lack of a sustaining institution.</p>
+    <div class="aside grave">
+      <span class="aside-label">ARCHANGEL — the ghost of our exact idea</span>
+      <p>From 2017–19, an EPSRC-funded project put a <a href="https://arxiv.org/abs/1804.08342">proof-of-authority blockchain jointly operated by national archives</a> — UK, Estonia, Norway, Australia, US — into trial, each nation underwriting the others' records, with content-aware hashes designed to survive format migration. It won a CVPR workshop best paper and proved the consortium mechanism. Then the grant ended, no institution picked it up, and the lead researcher moved to Adobe to work on C2PA. Nothing about it failed technically. Before pitching a single archive, we should understand exactly why no national archive continued it — the likeliest answers (no operating budget line, no legal entity, no mandate, capture-time industry momentum pulling talent away) are the precise problems our governance design must solve.</p>
+    </div>
+  </section>
+
+  <section id="legal">
+    <p class="eyebrow section-label">Section 5</p>
+    <h2>The legal landscape has moved in our favor</h2>
+    <ul>
+      <li><strong>eIDAS 2.0 (EU, in force May 2024)</strong> creates <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401183">"qualified electronic ledgers"</a> as a regulated trust service: records on a qualified ledger receive a legal <em>presumption</em> of accurate chronological ordering and integrity across all member states. This is a regulatory template — and potential certification path — for exactly our consortium ledger. It did not exist when ARCHANGEL died.</li>
+      <li><strong>China</strong> has accepted blockchain-preserved evidence in its Internet Courts since 2018; Supreme People's Court rules (2021) presume chained data untampered <em>after</em> anchoring — while explicitly noting courts must still examine pre-anchoring authenticity. The exact proven/asserted split our schema enforces.</li>
+      <li><strong>US states</strong> (Vermont, Arizona, Illinois, Ohio) have blockchain-evidence statutes; no federal standard. No court has yet accepted an OpenTimestamps proof by name — a first-mover legal opportunity for a well-run registry.</li>
+      <li><strong>The counter-precedent that helps us:</strong> <em>Weinhoffer v. Davie Shoring</em> (5th Cir. 2022) rejected Internet Archive captures as self-authenticating. Institutional custody alone no longer satisfies courts; cryptographic anchoring plus signed institutional attestation is precisely the upgrade the ruling implies.</li>
+    </ul>
+  </section>
+
+  <section id="gapmap">
+    <p class="eyebrow section-label">Section 6</p>
+    <h2>The gap map</h2>
+    <p>Against the three needs we set out to test:</p>
+    <ul>
+      <li><strong>(a) Mass retroactive ingestion of the mainstream historical record — unclaimed.</strong> Technically demonstrated once (Todd, 2017: 750M files, one transaction, no attestation layer, never continued). Starling does attestation-grade retro-authentication at hundreds-of-objects scale. Nobody combines the two, and <strong>no 9/11 archive — or any major broadcast corpus — has been cryptographically authenticated by anyone.</strong> Our pilot remains available.</li>
+      <li><strong>(b) An open multi-institution attestation web — unbuilt.</strong> C2PA's trust model is a corporate conformance allowlist; Adobe's recovery cloud is one company; Starling's Authenticated Attributes is the right primitive without open governance; ARCHANGEL had the governance and is gone. The registry-of-institutional-testimony layer exists nowhere.</li>
+      <li><strong>(c) Century-scale governance and permanence — the industry's defining failure, unsolved.</strong> Every operator-dependent system decayed within decades or less. The survivable pattern, assembled from the wreckage: consortium (not company) stewardship on the CLOCKSS model, self-contained open proofs verifiable with no live service (the OTS property), public-chain anchoring as the operator-independent backstop, and planned algorithm renewal. No one has combined all four. That combination <em>is</em> the project.</li>
+    </ul>
+  </section>
+
+  <section id="implications">
+    <p class="eyebrow section-label">Section 7</p>
+    <h2>What this changes in our plan</h2>
+    <ol class="body-list">
+      <li><strong>Build on, not beside.</strong> Adopt OpenTimestamps' proof format and aggregation design (running our own consortium calendar server), evaluate Starling's open-source Integrity Pipeline and Authenticated Attributes as the attestation substrate, and treat C2PA manifests as an ingestible input class. The design document's Section 4 mechanics survive intact — much of the code already exists.</li>
+      <li><strong>Reframe the pitch: the product is governance.</strong> What we are founding is not a protocol but an institution — closer to CLOCKSS or a standards body with an endowment than to a blockchain project. The technical sections are the easy 5%; the charter is the moat.</li>
+      <li><strong>Do the ARCHANGEL post-mortem before pitching archives.</strong> Its participants (UK National Archives' digital directorate, Surrey's DECaDE alumni) are reachable and their reasons for stopping are the requirements list for our governance design. They are also warm leads — institutions that already said yes once.</li>
+      <li><strong>Enter through the door the Library of Congress just opened.</strong> The G+LAM community of practice (July 2025–) is the exact convening of institutions we need, currently at the white-paper stage. Proposing the anchored-registry infrastructure to that community beats cold-pitching any single archive.</li>
+      <li><strong>Court Starling as founding technical partner, not competitor.</strong> Mission-identical, tooling-complementary, and constitutionally unable (as a grant-funded lab) to become the century-scale registry itself. The witness-server collaborators — Harvard LIL, Atlantic Council — are candidate consortium members.</li>
+      <li><strong>Pursue eIDAS 2.0 qualified-ledger status</strong> (or design toward eligibility) — it converts the registry from "interesting cryptography" into evidence with legal presumption across the EU, something no competitor holds.</li>
+      <li><strong>The pilot stands.</strong> The September 11 Television Archive remains unclaimed, historically urgent, and held by an institution (Internet Archive) whose court-facing authentication was publicly weakened by <em>Weinhoffer</em> and whose hashes are already published but unsigned. The pilot proposal writes itself: sign and anchor what they already publish.</li>
+    </ol>
+    <p class="footnote">Compiled September 12, 2026 from four parallel research tracks (timestamping systems; C2PA ecosystem; Starling Lab; archival/library/journalism practice). Claims are linked to sources throughout; items reported by a single secondary source were flagged in the underlying research and excluded or hedged here.</p>
+  </section>
+
+</div>

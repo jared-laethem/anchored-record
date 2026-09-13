@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Anchored Record</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #F6F6F2;
+    --surface: #FFFFFF;
+    --ink: #232823;
+    --muted: #5C635A;
+    --line: #DBDED3;
+    --accent: #23684B;
+    --accent-soft: #E4EEE7;
+    --bronze: #8A6B33;
+    --bronze-soft: #F1EADB;
+    --code-bg: #EDEEE6;
+    --danger: #9A3B2E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161915;
+      --surface: #1D211C;
+      --ink: #E6E5DC;
+      --muted: #9BA294;
+      --line: #333831;
+      --accent: #5BBB8C;
+      --accent-soft: #1E2C24;
+      --bronze: #CDA45F;
+      --bronze-soft: #2A2519;
+      --code-bg: #22261F;
+      --danger: #D07A6B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161915;
+    --surface: #1D211C;
+    --ink: #E6E5DC;
+    --muted: #9BA294;
+    --line: #333831;
+    --accent: #5BBB8C;
+    --accent-soft: #1E2C24;
+    --bronze: #CDA45F;
+    --bronze-soft: #2A2519;
+    --code-bg: #22261F;
+    --danger: #D07A6B;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Newsreader", Georgia, "Times New Roman", serif;
+    font-size: 1.125rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 47rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+  }
+
+  h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-size: 1.7rem;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  h3 { font-size: 1.25rem; font-weight: 600; }
+  p { margin: 0; }
+
+  .eyebrow {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .doc-header { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
+  .doc-header .subtitle {
+    font-size: 1.3rem;
+    font-style: italic;
+    color: var(--muted);
+    max-width: 38rem;
+  }
+  .doc-meta {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.78rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  nav.toc {
+    margin: 2.5rem 0 0;
+    padding: 1.4rem 1.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  nav.toc .eyebrow { color: var(--muted); }
+  nav.toc ol {
+    margin: 0.8rem 0 0;
+    padding: 0;
+    list-style: none;
+    columns: 2;
+    column-gap: 2.5rem;
+  }
+  nav.toc li { margin: 0.28rem 0; break-inside: avoid; font-size: 1rem; }
+  nav.toc a { color: var(--ink); text-decoration: none; }
+  nav.toc a:hover { color: var(--accent); text-decoration: underline; }
+  nav.toc .n {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent);
+    display: inline-block;
+    width: 1.6rem;
+  }
+  @media (max-width: 600px) { nav.toc ol { columns: 1; } }
+
+  section { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 3.8rem; }
+  .section-label { margin-bottom: -0.6rem; }
+  section > h3 { margin-top: 0.8rem; }
+
+  a { color: var(--accent); }
+
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  ul, ol.body-list { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  li::marker { color: var(--accent); }
+
+  code, .hash {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.82em;
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+  }
+
+  .aside {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--bronze);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .aside .aside-label {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--bronze);
+  }
+  .aside p { font-size: 1.02rem; }
+
+  .claim {
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    padding: 1.2rem 1.5rem;
+    font-size: 1.15rem;
+  }
+  .claim .claim-label {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .hash-demo {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    padding: 1rem 1.2rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .hash-demo .in { color: var(--muted); }
+  .hash-demo .out { color: var(--accent); font-weight: 500; }
+  .hash-demo code { background: none; padding: 0; font-size: 1em; }
+
+  .steps { display: flex; flex-direction: column; gap: 1.6rem; counter-reset: step; margin-top: 0.4rem; }
+  .step { display: grid; grid-template-columns: 2.6rem 1fr; gap: 0 1rem; }
+  .step::before {
+    counter-increment: step;
+    content: counter(step);
+    font-family: "Archivo", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.15rem;
+  }
+  .step h3 { grid-column: 2; }
+  .step .step-body { grid-column: 2; display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.45rem; }
+
+  figure { margin: 0.8rem 0 0.4rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .fig-frame {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 1.2rem;
+    overflow-x: auto;
+  }
+  figure svg { display: block; max-width: 100%; height: auto; min-width: 560px; margin: 0 auto; }
+  figcaption {
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-style: italic;
+    padding: 0 0.3rem;
+  }
+  figcaption .fig-n {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bronze);
+    margin-right: 0.5rem;
+  }
+  .d-box { fill: var(--surface); stroke: currentColor; stroke-width: 1.2; }
+  .d-box-soft { fill: var(--code-bg); stroke: var(--muted); stroke-width: 1; }
+  .d-accent-box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+  .d-bronze-box { fill: var(--bronze-soft); stroke: var(--bronze); stroke-width: 1.4; }
+  .d-line { stroke: currentColor; stroke-width: 1.2; fill: none; }
+  .d-line-accent { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+  .d-line-bronze { stroke: var(--bronze); stroke-width: 1.6; fill: none; }
+  .d-line-muted { stroke: var(--muted); stroke-width: 1; fill: none; }
+  .d-dash { stroke-dasharray: 5 4; }
+  .d-text { font-family: "Archivo", system-ui, sans-serif; font-size: 12px; fill: currentColor; }
+  .d-text-sm { font-family: "Archivo", system-ui, sans-serif; font-size: 10.5px; fill: var(--muted); }
+  .d-mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 10.5px; fill: currentColor; }
+  .d-accent-t { fill: var(--accent); }
+  .d-bronze-t { fill: var(--bronze); }
+  .d-danger-t { fill: var(--danger); }
+  .d-danger-line { stroke: var(--danger); stroke-width: 1.6; fill: none; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.98rem; }
+  th {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--muted);
+    padding: 0.7rem 1rem;
+    border-bottom: 1.5px solid var(--line);
+    white-space: nowrap;
+  }
+  td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.field { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; white-space: nowrap; }
+  td .tag {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.12rem 0.45rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .tag.proven { background: var(--accent-soft); color: var(--accent); }
+  .tag.asserted { background: var(--bronze-soft); color: var(--bronze); }
+
+  dl.glossary { margin: 0.4rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.55rem 1.4rem; }
+  dl.glossary dt { font-weight: 600; }
+  dl.glossary dd { margin: 0; color: var(--ink); font-size: 1.02rem; }
+  @media (max-width: 600px) {
+    dl.glossary { grid-template-columns: 1fr; gap: 0.15rem; }
+    dl.glossary dd { margin-bottom: 0.7rem; color: var(--muted); }
+  }
+
+  .footnote { font-size: 0.95rem; color: var(--muted); }
+</style>
+
+<div class="page">
+
+  <header class="doc-header">
+    <p class="eyebrow">Design Document · Draft 3</p>
+    <h1>The Anchored Record</h1>
+    <p class="subtitle">A permanent public registry that lets anyone, at any point in the future, verify that a document existed at a known date, unaltered — and see exactly who vouched for it.</p>
+    <div class="doc-meta">
+      <span>Working name — see open questions</span>
+      <span>September 2026</span>
+      <span>Status: concept &amp; architecture · Draft 3 adds the patronage funding model</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Contents">
+    <p class="eyebrow">Contents</p>
+    <ol>
+      <li><span class="n">1</span><a href="#purpose">Purpose &amp; threat model</a></li>
+      <li><span class="n">2</span><a href="#claims">What the system proves — and what it doesn't</a></li>
+      <li><span class="n">3</span><a href="#primer">A working mental model of blockchains</a></li>
+      <li><span class="n">4</span><a href="#anchoring">The anchoring mechanism, end to end</a></li>
+      <li><span class="n">5</span><a href="#network">Our network: the registry ledger</a></li>
+      <li><span class="n">6</span><a href="#time">Time: anchored vs. asserted dates</a></li>
+      <li><span class="n">7</span><a href="#attestation">Identity &amp; attestations</a></li>
+      <li><span class="n">8</span><a href="#hashes">Hash durability over a century</a></li>
+      <li><span class="n">9</span><a href="#schema">The record schema</a></li>
+      <li><span class="n">10</span><a href="#seeding">Seeding the historical record</a></li>
+      <li><span class="n">11</span><a href="#nongoals">Deliberate non-goals</a></li>
+      <li><span class="n">12</span><a href="#priorart">Prior art &amp; positioning</a></li>
+      <li><span class="n">13</span><a href="#incentives">Incentives &amp; sustainability</a></li>
+      <li><span class="n">14</span><a href="#open">Open questions</a></li>
+      <li><span class="n">15</span><a href="#glossary">Glossary</a></li>
+    </ol>
+  </nav>
+
+  <section id="purpose">
+    <p class="eyebrow section-label">Section 1</p>
+    <h2>Purpose &amp; threat model</h2>
+    <p>Generative AI is erasing the gap between genuine and fabricated evidence. Within our lifetimes it will be possible to produce video, audio, photographs, and documents of events that never happened — indistinguishable from the real thing by inspection. Over long time spans, motivated actors can use that capability to launder preferred narratives into the historical record, and a society with no way to tell original evidence from later fabrication slowly loses its history.</p>
+    <p>The Anchored Record is a defense built on one observation: <strong>a forgery can be made indistinguishable from the original, but it cannot be made older than the original.</strong> If the genuine artifact's cryptographic fingerprint is locked into a public, unrewritable ledger today, then any competing "evidence" fabricated in 2040 arrives provably 14 years late. The registry does not decide what is true; it makes <em>when a thing existed, and who stood behind it</em> permanent facts that no future actor can quietly revise.</p>
+    <p>The adversaries we design against:</p>
+    <ul>
+      <li><strong>Future fabrication</strong> — synthetic artifacts created after the fact to support an alternative narrative.</li>
+      <li><strong>Silent alteration</strong> — edits to genuine archives (a frame removed, a caption changed) that no one can later detect.</li>
+      <li><strong>Institutional capture</strong> — a government, platform, or even the registry's own operators attempting to rewrite or censor entries.</li>
+      <li><strong>Technological decay</strong> — cryptographic algorithms weakening, host blockchains dying, and file formats rotting over a 100-year horizon.</li>
+    </ul>
+  </section>
+
+  <section id="claims">
+    <p class="eyebrow section-label">Section 2</p>
+    <h2>What the system proves — and what it doesn't</h2>
+    <p>A blockchain can make a statement permanent; it cannot make a statement true. A fabricated photo registered on-chain is still fabricated — it is merely <em>provably old</em> fabrication. This is the central honesty constraint of the whole project, and the design embraces it by splitting trust into three layers:</p>
+    <ul>
+      <li><strong>Integrity layer (cryptographic).</strong> Content fingerprints anchored in an unrewritable ledger. Proves: <em>this exact sequence of bytes existed no later than date X and has not changed since.</em> Machine-checkable by anyone, forever.</li>
+      <li><strong>Provenance layer (cryptographic + procedural).</strong> Signed capture and custody metadata — for new content, hardware-signed at the moment of capture (the C2PA standard); for historical content, the holding archive's accession trail. Proves: <em>this is where the artifact came from and how it traveled.</em></li>
+      <li><strong>Attestation layer (social, made permanent).</strong> Named institutions and individuals cryptographically endorsing artifacts, staking their reputations. Truth emerges from an accountable web of signatures — not from the registry declaring it.</li>
+    </ul>
+    <div class="claim">
+      <span class="claim-label">The formal claim, for a historical artifact</span>
+      "This exact file existed <strong>no later than 2026</strong>, has not been altered since, and these <strong>named institutions</strong> attest — on evidence they cite and sign — that it was created on <strong>September 11, 2001</strong>."
+    </div>
+    <p>The first clause is mathematics. The last clause is testimony, made permanent and accountable. Keeping that line crisp — never presenting testimony as proof — is what makes the registry credible enough to matter.</p>
+  </section>
+
+  <section id="primer">
+    <p class="eyebrow section-label">Section 3</p>
+    <h2>A working mental model of blockchains</h2>
+    <p>This section builds, from zero, exactly the concepts the rest of the document uses. There are only four: hashes, chained blocks, proof of work, and Merkle trees.</p>
+
+    <h3>3.1 — A hash is a fingerprint for bytes</h3>
+    <p>A cryptographic hash function (we'll use SHA-256, the one Bitcoin uses) takes any input — a sentence, a 4&nbsp;GB video — and produces a fixed-size 32-byte fingerprint. The same input always gives the same fingerprint. Change <em>anything</em> about the input and the fingerprint changes completely and unpredictably. These two sentences differ by a single digit:</p>
+    <div class="hash-demo">
+      <div><span class="in">sha256("The first tower fell at 9:59 a.m.")</span></div>
+      <div class="out">7e19731e2654c2d902e06886a477037fc31296a99e19dfed16bec4d5739d7229</div>
+      <div style="height:0.6rem"></div>
+      <div><span class="in">sha256("The first tower fell at 9:58 a.m.")</span></div>
+      <div class="out">595d2f040411a32c99b0f4b026117727ad64c97d2c45f30ff5be84616a72d33a</div>
+    </div>
+    <p>Two properties matter for us. <strong>One-way:</strong> given a fingerprint, you cannot reconstruct the input — so publishing a hash reveals nothing about the document. <strong>Binding:</strong> nobody can find a <em>different</em> input that produces the same fingerprint (Section 8 examines how confident we can be in that over a century). Together they mean: if you hold a fingerprint from 2026 and someone hands you a file in 2080, recomputing the hash tells you with certainty whether it is the identical, unaltered file.</p>
+    <div class="aside">
+      <span class="aside-label">In plain terms</span>
+      <p>A hash is like a wax seal that any copy of the document can regenerate. You can't reverse the seal back into the document, and no altered document can fake the seal — but anyone holding the real document can re-press the seal and check it matches.</p>
+    </div>
+
+    <h3>3.2 — A blockchain is a ledger where each page seals the page before it</h3>
+    <p>A blockchain is an append-only ledger, replicated across thousands of independent computers ("nodes"), organized into batches called blocks. The trick that makes it tamper-evident: <strong>every block contains the hash of the previous block.</strong> Block 900,002 includes the fingerprint of block 900,001, which includes the fingerprint of 900,000, and so on back to the beginning. Alter one character in an old block and its hash changes; that breaks the pointer in the next block, whose hash therefore changes too, cascading forward through every subsequent block. You cannot quietly edit history — you can only visibly rewrite everything after your edit.</p>
+
+    <h3>3.3 — Proof of work makes the rewrite unaffordable</h3>
+    <p>Tamper-<em>evidence</em> isn't enough; you also need rewriting to be practically impossible. Bitcoin's answer: to add a block, a computer must win a brute-force lottery — trying quadrillions of guesses until it finds a number that makes the block's hash fall below a target. This is "mining," and the network's combined guessing rate is currently on the order of 10²⁰–10²¹ hashes <em>per second</em>. Each block therefore embodies an enormous quantity of provably-performed computation, and every node independently follows one rule: the valid chain with the most cumulative work is the real one.</p>
+    <p>To alter a transaction buried 1,000 blocks deep, an attacker must re-mine that block <em>and all 1,000 after it</em>, and do so faster than the entire honest network extends the chain — meaning they must sustainably out-compute every miner on earth combined. Sixteen years and trillions of dollars of incentive have not produced a single successful rewrite of settled Bitcoin history. That accumulated, verified expenditure of energy is the product we are buying when we anchor: we rent the security of the most attacked ledger in existence for the cost of one small transaction.</p>
+    <div class="aside">
+      <span class="aside-label">Why we don't run our own proof of work</span>
+      <p>Security scales with honest computing power. A new, small proof-of-work chain can be overwhelmed with rented hashpower for a few thousand dollars — dozens of small chains have been attacked exactly this way. For a project whose entire premise is "history cannot be rewritten," launching with weak security would be self-defeating. Section 5 describes what our network uses instead.</p>
+    </div>
+
+    <h3>3.4 — Merkle trees: a million records in one fingerprint</h3>
+    <p>Writing to Bitcoin costs a fee per transaction, and a transaction can carry only ~80 bytes of arbitrary data. That is not a limitation for us, because of a structure called a Merkle tree: take a million record hashes, pair them up and hash each pair, pair up <em>those</em> results and hash again, and repeat until a single 32-byte <strong>root</strong> remains. The root provably commits to every record beneath it — change any one record and the root changes.</p>
+    <p>The counterintuitive gift is verification cost. To prove one specific record is in the tree, you don't need the other 999,999 — you need only the ~20 "sibling" hashes along the path from your record up to the root (log₂ of a million). That handful of hashes is called a <strong>Merkle proof</strong>, it's under a kilobyte, and anyone can check it in microseconds. So: unlimited records in, one 32-byte anchor out, and every individual record independently provable. Figure 2 draws it.</p>
+
+    <h3>3.5 — Documents never go on the chain</h3>
+    <p>Nothing about the files themselves — not content, not thumbnails — is ever published to any blockchain. Only fingerprints and signed metadata. This keeps costs trivial, keeps copyrighted and sensitive material out of scope (a hash of a copyrighted work carries no copyright), and means registering a document reveals nothing about it until its holder chooses to produce it.</p>
+  </section>
+
+  <section id="anchoring">
+    <p class="eyebrow section-label">Section 4</p>
+    <h2>The anchoring mechanism, end to end</h2>
+    <p>This is the mechanistic core of the design. We follow one artifact — say, a broadcast master tape of September 11 coverage, digitized by its holding archive — from a file on a curator's disk to a permanent, independently verifiable anchor in Bitcoin, and then forward fifty years to the person verifying it.</p>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 400" role="img" aria-label="Pipeline from a file, hashed locally, submitted as a record to the registry ledger, batched into a Merkle tree whose root is embedded in a Bitcoin transaction inside the chained blocks.">
+          <defs>
+            <marker id="arwA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+            <marker id="arwAg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+            </marker>
+            <marker id="arwAb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--bronze)"/>
+            </marker>
+          </defs>
+
+          <!-- Row 1: file -> hash -> record -> ledger -->
+          <path class="d-box" d="M40 40 h72 l16 16 v52 h-88 z"/>
+          <path class="d-line" d="M112 40 v16 h16"/>
+          <text class="d-text" x="84" y="76" text-anchor="middle">video file</text>
+          <text class="d-text-sm" x="84" y="92" text-anchor="middle">stays at archive</text>
+
+          <line class="d-line" x1="128" y1="74" x2="196" y2="74" marker-end="url(#arwA)"/>
+          <text class="d-text-sm" x="162" y="64" text-anchor="middle">SHA-256</text>
+
+          <rect class="d-box" x="196" y="52" width="128" height="44"/>
+          <text class="d-mono" x="260" y="71" text-anchor="middle">9f3a…c41b</text>
+          <text class="d-text-sm" x="260" y="87" text-anchor="middle">32-byte fingerprint</text>
+
+          <line class="d-line" x1="324" y1="74" x2="392" y2="74" marker-end="url(#arwA)"/>
+          <text class="d-text-sm" x="358" y="56" text-anchor="middle">+ metadata,</text>
+          <text class="d-text-sm" x="358" y="68" text-anchor="middle">signed</text>
+
+          <rect class="d-accent-box" x="392" y="30" width="200" height="120"/>
+          <text class="d-text d-accent-t" x="492" y="52" text-anchor="middle" font-weight="600">Registry ledger</text>
+          <rect class="d-box-soft" x="408" y="64" width="168" height="20"/>
+          <text class="d-mono" x="416" y="78">rec 4091  9f3a…</text>
+          <rect class="d-box-soft" x="408" y="90" width="168" height="20"/>
+          <text class="d-mono" x="416" y="104">rec 4092  22e7…</text>
+          <rect class="d-box-soft" x="408" y="116" width="168" height="20"/>
+          <text class="d-mono" x="416" y="130">rec 4093  b0d1…</text>
+
+          <!-- ledger down to merkle -->
+          <line class="d-line-accent" x1="492" y1="150" x2="492" y2="196" marker-end="url(#arwAg)"/>
+          <text class="d-text-sm" x="504" y="178">epoch closes: batch all new records</text>
+
+          <!-- Merkle mini-tree -->
+          <rect class="d-box-soft" x="404" y="300" width="40" height="24"/>
+          <rect class="d-box-soft" x="454" y="300" width="40" height="24"/>
+          <rect class="d-box-soft" x="504" y="300" width="40" height="24"/>
+          <rect class="d-box-soft" x="554" y="300" width="40" height="24"/>
+          <text class="d-text-sm" x="499" y="342" text-anchor="middle">record hashes (thousands)</text>
+          <rect class="d-box" x="429" y="252" width="40" height="24"/>
+          <rect class="d-box" x="529" y="252" width="40" height="24"/>
+          <line class="d-line-muted" x1="424" y1="300" x2="443" y2="276"/>
+          <line class="d-line-muted" x1="474" y1="300" x2="455" y2="276"/>
+          <line class="d-line-muted" x1="524" y1="300" x2="543" y2="276"/>
+          <line class="d-line-muted" x1="574" y1="300" x2="555" y2="276"/>
+          <rect class="d-bronze-box" x="479" y="204" width="40" height="24"/>
+          <line class="d-line-muted" x1="449" y1="252" x2="491" y2="228"/>
+          <line class="d-line-muted" x1="549" y1="252" x2="507" y2="228"/>
+          <text class="d-text d-bronze-t" x="527" y="220" font-weight="600">root — 32 bytes</text>
+
+          <!-- root to bitcoin -->
+          <line class="d-line-bronze" x1="519" y1="216" x2="668" y2="216" marker-end="url(#arwAb)"/>
+          <text class="d-text-sm" x="595" y="206" text-anchor="middle">one transaction, ~$2</text>
+
+          <!-- Bitcoin blocks -->
+          <rect class="d-box" x="672" y="160" width="92" height="112"/>
+          <text class="d-text" x="718" y="182" text-anchor="middle">Block N</text>
+          <rect class="d-bronze-box" x="684" y="196" width="68" height="30"/>
+          <text class="d-text-sm d-bronze-t" x="718" y="215" text-anchor="middle">our root</text>
+          <text class="d-text-sm" x="718" y="246" text-anchor="middle">+ thousands of</text>
+          <text class="d-text-sm" x="718" y="259" text-anchor="middle">other payments</text>
+
+          <rect class="d-box" x="794" y="160" width="82" height="112"/>
+          <text class="d-text" x="835" y="182" text-anchor="middle">Block N+1</text>
+          <rect class="d-box-soft" x="806" y="196" width="58" height="26"/>
+          <text class="d-text-sm" x="835" y="213" text-anchor="middle">hash of N</text>
+          <line class="d-line" x1="794" y1="216" x2="768" y2="216" marker-end="url(#arwA)"/>
+
+          <text class="d-text-sm" x="774" y="296" text-anchor="middle">each block seals the one before it —</text>
+          <text class="d-text-sm" x="774" y="310" text-anchor="middle">rewriting N means re-mining everything after it</text>
+          <text class="d-text" x="774" y="140" text-anchor="middle" font-weight="600">Bitcoin</text>
+        </svg>
+      </div>
+      <figcaption><span class="fig-n">Figure 1</span>From disk to anchor: the file never leaves its archive; only its fingerprint travels. Thousands of records collapse into one 32-byte Merkle root, carried by a single ordinary Bitcoin transaction.</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <h3>Hash locally — the file never leaves the archive</h3>
+        <div class="step-body">
+          <p>The curator runs our tool against the digitized file. It computes two fingerprints under independent algorithms (SHA-256 and SHA3-256 — Section 8 explains why two) on the archive's own machine. Nothing is uploaded. For a 50&nbsp;GB master file this takes a couple of minutes; for a million-file collection it's an overnight batch job.</p>
+        </div>
+      </div>
+      <div class="step">
+        <h3>Submit a signed record to the registry ledger</h3>
+        <div class="step-body">
+          <p>The tool assembles a <strong>record</strong> — the fingerprints plus the metadata of Section 9 (asserted creation date, provenance references, content description) — and signs it with the archive's registered cryptographic key, so the submission is unforgeably attributable. The record goes to the registry network (our consortium ledger, Section 5), whose nodes validate the signature and format and write it into the next ledger block. At this point the record is replicated across every consortium institution, but not yet anchored.</p>
+        </div>
+      </div>
+      <div class="step">
+        <h3>The epoch closes; records are batched into a Merkle tree</h3>
+        <div class="step-body">
+          <p>On a fixed cadence — say hourly — the ledger closes an <strong>epoch</strong>: every record accepted since the last close becomes the leaves of a Merkle tree, computed identically and deterministically by every node. One epoch might hold ten records or ten million; either way it reduces to one 32-byte root. Batching is why our marginal cost per record is effectively zero.</p>
+        </div>
+      </div>
+      <div class="step">
+        <h3>The root is anchored into Bitcoin (and Ethereum)</h3>
+        <div class="step-body">
+          <p>Now the part that makes the history unrewritable. Bitcoin transactions can carry a small arbitrary-data field (an <code>OP_RETURN</code> output, up to 80 bytes). The registry constructs an ordinary transaction — from our own wallet, paying a normal fee of a few dollars — whose data field is the epoch root, and broadcasts it to the Bitcoin network like any other payment.</p>
+          <p>Here is the crucial mechanistic point about working on someone else's network: <strong>we need no permission, no partnership, and no special status.</strong> Miners neither know nor care what our 80 bytes mean; they include the transaction because it pays a fee, exactly as they include millions of others. Within ~10 minutes it is mined into a block; after ~6 further blocks (~1 hour) it is buried under enough proof of work that reversal is considered practically impossible. Our root now sits inside the chained-and-sealed structure of Section 3.2, protected by the full mining power of the network — which is defending its own monetary history and ours as an inseparable side effect.</p>
+          <p>For redundancy against the death or capture of any single chain, the same root is also written to Ethereum (as an event in a small contract) and can be cheaply mirrored to others. The anchors are independent; any one surviving suffices.</p>
+        </div>
+      </div>
+      <div class="step">
+        <h3>Receipts: every record gets a portable proof</h3>
+        <div class="step-body">
+          <p>Once the anchor transaction is confirmed, the ledger stores — and hands back to the registrant — a <strong>receipt</strong>: the record's Merkle proof (the ~20 sibling hashes up to the epoch root) plus the identifiers of the anchor transactions and blocks. The receipt is under a kilobyte, is not secret, and is self-contained: it will let anyone, forever, verify this one record against the public blockchains without contacting us. Registrants are encouraged to store receipts alongside the files themselves.</p>
+        </div>
+      </div>
+      <div class="step">
+        <h3>Verification, fifty years later</h3>
+        <div class="step-body">
+          <p>2076. Someone produces a video file and claims it is the anchored 2026 broadcast master. A skeptic — with no trust in us, and even if our organization no longer exists — checks it as follows:</p>
+          <ol class="body-list">
+            <li>Recompute the file's SHA-256 and SHA3-256. If either differs from the record, the file is not the anchored artifact. Done.</li>
+            <li>Replay the Merkle proof: hash the record with its ~20 siblings, arriving at an epoch root.</li>
+            <li>Confirm that root sits in the referenced Bitcoin block — using any copy of the Bitcoin blockchain, of which thousands exist worldwide — and that the block sits under the chain's accumulated proof of work.</li>
+          </ol>
+          <p>Every step is arithmetic on public data. The full Bitcoin block-header chain — sufficient for step 3 — grows about 4&nbsp;MB per year; a century of it fits on any device. This is the property the whole design serves: <strong>verification requires no institution, no server, and no permission — only the file, a kilobyte receipt, and public data.</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 720 300" role="img" aria-label="A Merkle tree of eight records; one record's proof path of three sibling hashes is highlighted from leaf to root.">
+          <defs>
+            <marker id="arwB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+            </marker>
+          </defs>
+          <!-- leaves: 8, at y=230 -->
+          <!-- x centers: 80,160,240,320,400,480,560,640 -->
+          <rect class="d-box-soft" x="52" y="230" width="56" height="26"/>
+          <rect class="d-box-soft" x="132" y="230" width="56" height="26"/>
+          <rect class="d-accent-box" x="212" y="230" width="56" height="26"/>
+          <rect class="d-bronze-box" x="292" y="230" width="56" height="26"/>
+          <rect class="d-box-soft" x="372" y="230" width="56" height="26"/>
+          <rect class="d-box-soft" x="452" y="230" width="56" height="26"/>
+          <rect class="d-box-soft" x="532" y="230" width="56" height="26"/>
+          <rect class="d-box-soft" x="612" y="230" width="56" height="26"/>
+          <text class="d-text d-accent-t" x="240" y="247" text-anchor="middle" font-weight="600">yours</text>
+          <text class="d-text-sm" x="80" y="276" text-anchor="middle">rec 1</text>
+          <text class="d-text-sm" x="160" y="276" text-anchor="middle">rec 2</text>
+          <text class="d-text-sm" x="320" y="276" text-anchor="middle">rec 4</text>
+          <text class="d-text-sm" x="400" y="276" text-anchor="middle">rec 5</text>
+          <text class="d-text-sm" x="480" y="276" text-anchor="middle">rec 6</text>
+          <text class="d-text-sm" x="560" y="276" text-anchor="middle">rec 7</text>
+          <text class="d-text-sm" x="640" y="276" text-anchor="middle">rec 8</text>
+          <!-- level 2 pairs: centers 120, 280, 440, 600 at y=160 -->
+          <rect class="d-box-soft" x="92" y="160" width="56" height="26"/>
+          <rect class="d-accent-box" x="252" y="160" width="56" height="26"/>
+          <rect class="d-box-soft" x="412" y="160" width="56" height="26"/>
+          <rect class="d-box-soft" x="572" y="160" width="56" height="26"/>
+          <line class="d-line-muted" x1="80" y1="230" x2="112" y2="186"/>
+          <line class="d-line-muted" x1="160" y1="230" x2="128" y2="186"/>
+          <line class="d-line-accent" x1="240" y1="230" x2="272" y2="186" marker-end="url(#arwB)"/>
+          <line class="d-line-muted" x1="320" y1="230" x2="288" y2="186"/>
+          <line class="d-line-muted" x1="400" y1="230" x2="432" y2="186"/>
+          <line class="d-line-muted" x1="480" y1="230" x2="448" y2="186"/>
+          <line class="d-line-muted" x1="560" y1="230" x2="592" y2="186"/>
+          <line class="d-line-muted" x1="640" y1="230" x2="608" y2="186"/>
+          <!-- level 3: centers 200, 520 at y=90 -->
+          <rect class="d-accent-box" x="172" y="90" width="56" height="26"/>
+          <rect class="d-bronze-box" x="492" y="90" width="56" height="26"/>
+          <line class="d-line-accent" x1="120" y1="160" x2="188" y2="116"/>
+          <line class="d-line-accent" x1="280" y1="160" x2="212" y2="116" marker-end="url(#arwB)"/>
+          <line class="d-line-muted" x1="440" y1="160" x2="508" y2="116"/>
+          <line class="d-line-muted" x1="600" y1="160" x2="532" y2="116"/>
+          <!-- the sibling at level2 for our path is the pair (120,160) bronze? Let me mark siblings bronze: leaf sibling rec4 (bronze), level-2 sibling at x=92? no: our node at level2 is 252 (accent); its sibling is 92-box (x-center 120) -->
+          <!-- root center 360 y=24 -->
+          <rect class="d-bronze-box" x="330" y="18" width="60" height="28"/>
+          <text class="d-text d-bronze-t" x="404" y="36" font-weight="600">root → anchored in Bitcoin</text>
+          <line class="d-line-accent" x1="200" y1="90" x2="342" y2="46" marker-end="url(#arwB)"/>
+          <line class="d-line-muted" x1="520" y1="90" x2="378" y2="46"/>
+          <!-- mark siblings: level1 sibling rec4 already bronze at x=292; level2 sibling is box at x=92 -> make bronze -->
+          <rect class="d-bronze-box" x="92" y="160" width="56" height="26"/>
+          <rect class="d-bronze-box" x="492" y="90" width="56" height="26"/>
+          <text class="d-text-sm d-bronze-t" x="120" y="152" text-anchor="middle">sibling 2</text>
+          <text class="d-text-sm d-bronze-t" x="320" y="222" text-anchor="middle">sibling 1</text>
+          <text class="d-text-sm d-bronze-t" x="520" y="82" text-anchor="middle">sibling 3</text>
+        </svg>
+      </div>
+      <figcaption><span class="fig-n">Figure 2</span>A Merkle proof: to show "yours" is under the anchored root, you need only the three bronze sibling hashes — not the other records. A million-record epoch needs just twenty siblings.</figcaption>
+    </figure>
+
+    <div class="aside">
+      <span class="aside-label">Prior art: this pipeline already exists</span>
+      <p>The mechanism in steps 3–5 is precisely the design of <a href="https://en.wikipedia.org/wiki/OpenTimestamps">OpenTimestamps</a> (Peter Todd, 2016): calendar servers Merkle-aggregate unlimited submissions into roughly one Bitcoin transaction an hour, free, with self-contained receipts verifiable offline forever. Its 2017 anchoring of ~750 million Internet Archive files in a single transaction proved the mass-ingestion math in production. We adopt its proof format and aggregation design — running our own consortium calendar server rather than relying on today's donation-funded, essentially one-maintainer public infrastructure — instead of reinventing this layer. See Section 12.</p>
+    </div>
+
+    <h3>Costs and dependencies of riding an existing network</h3>
+    <ul>
+      <li><strong>Cost.</strong> One transaction per epoch per chain. Hourly anchoring to Bitcoin and Ethereum runs to roughly $50–100/day at typical fees — independent of volume, whether the epoch holds one record or ten million.</li>
+      <li><strong>No counterparty.</strong> There is no contract with "Bitcoin"; there is nothing to negotiate and no one who can cancel us. The flip side: no support and no guarantees beyond the protocol itself.</li>
+      <li><strong>Fee volatility.</strong> Fees fluctuate with network demand. Because we write ~24 transactions a day rather than one per record, even a 100× fee spike is an operational nuisance, not an existential problem.</li>
+      <li><strong>Censorship.</strong> Miners could theoretically refuse our transactions; because any miner anywhere can include them and they look like ordinary payments, sustained global censorship is considered impractical.</li>
+      <li><strong>Host-chain death.</strong> If a host chain declines, its existing anchors remain checkable so long as copies of its data survive (a dead chain's history still verifies; it just stops growing). We mitigate with multi-chain anchoring, and a standing procedure: if a host weakens, anchor the registry's full state onto its successor <em>before</em> the decline — the old anchors then prove the migration itself predates any trouble.</li>
+    </ul>
+  </section>
+
+  <section id="network">
+    <p class="eyebrow section-label">Section 5</p>
+    <h2>Our network: the registry ledger</h2>
+    <p>Bitcoin gives us unrewritability but only 80 bytes an hour. The registry itself — full records, metadata, attestations, receipts — lives on our own ledger, and its design goal is different: not to win a security arms race (the anchors handle that), but to be <strong>rich, replicated, and governable</strong>.</p>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 330" role="img" aria-label="Institutions submit records to a consortium ledger whose blocks are co-signed by member nodes; the ledger's epoch roots anchor down into Bitcoin and Ethereum; the public reads and mirrors the ledger freely.">
+          <defs>
+            <marker id="arwC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+            <marker id="arwCb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--bronze)"/>
+            </marker>
+          </defs>
+          <!-- member nodes row -->
+          <rect class="d-box" x="40" y="40" width="150" height="52"/>
+          <text class="d-text" x="115" y="62" text-anchor="middle">National Archive</text>
+          <text class="d-text-sm" x="115" y="78" text-anchor="middle">node · full copy</text>
+          <rect class="d-box" x="220" y="40" width="150" height="52"/>
+          <text class="d-text" x="295" y="62" text-anchor="middle">University Library</text>
+          <text class="d-text-sm" x="295" y="78" text-anchor="middle">node · full copy</text>
+          <rect class="d-box" x="400" y="40" width="150" height="52"/>
+          <text class="d-text" x="475" y="62" text-anchor="middle">News Archive</text>
+          <text class="d-text-sm" x="475" y="78" text-anchor="middle">node · full copy</text>
+          <rect class="d-box" x="580" y="40" width="150" height="52"/>
+          <text class="d-text" x="655" y="62" text-anchor="middle">… 10–50 members</text>
+          <text class="d-text-sm" x="655" y="78" text-anchor="middle">multiple jurisdictions</text>
+
+          <!-- arrows down to ledger -->
+          <line class="d-line" x1="115" y1="92" x2="330" y2="148" marker-end="url(#arwC)"/>
+          <line class="d-line" x1="295" y1="92" x2="370" y2="148" marker-end="url(#arwC)"/>
+          <line class="d-line" x1="475" y1="92" x2="420" y2="148" marker-end="url(#arwC)"/>
+          <line class="d-line" x1="655" y1="92" x2="460" y2="148" marker-end="url(#arwC)"/>
+          <text class="d-text-sm" x="620" y="126" >submit records · co-sign every block (⅔ quorum)</text>
+
+          <!-- ledger -->
+          <rect class="d-accent-box" x="290" y="152" width="220" height="66"/>
+          <text class="d-text d-accent-t" x="400" y="178" text-anchor="middle" font-weight="600">Registry ledger</text>
+          <text class="d-text-sm" x="400" y="196" text-anchor="middle">full records + attestations</text>
+          <text class="d-text-sm" x="400" y="209" text-anchor="middle">append-only · ~1 KB per record</text>
+
+          <!-- public mirror -->
+          <rect class="d-box" x="660" y="160" width="190" height="52"/>
+          <text class="d-text" x="755" y="182" text-anchor="middle">Public</text>
+          <text class="d-text-sm" x="755" y="198" text-anchor="middle">reads, mirrors, verifies — free</text>
+          <line class="d-line" x1="660" y1="186" x2="514" y2="186" marker-end="url(#arwC)"/>
+
+          <!-- anchors down -->
+          <line class="d-line-bronze" x1="360" y1="218" x2="300" y2="276" marker-end="url(#arwCb)"/>
+          <line class="d-line-bronze" x1="440" y1="218" x2="500" y2="276" marker-end="url(#arwCb)"/>
+          <text class="d-text-sm d-bronze-t" x="400" y="252" text-anchor="middle">epoch root, hourly</text>
+          <rect class="d-bronze-box" x="200" y="280" width="130" height="36"/>
+          <text class="d-text" x="265" y="302" text-anchor="middle">Bitcoin</text>
+          <rect class="d-bronze-box" x="470" y="280" width="130" height="36"/>
+          <text class="d-text" x="535" y="302" text-anchor="middle">Ethereum</text>
+        </svg>
+      </div>
+      <figcaption><span class="fig-n">Figure 3</span>The hybrid: a consortium ledger holds the rich record; hourly anchors rent Bitcoin's and Ethereum's unrewritability. Members could collude to rewrite the ledger going forward — but never anything already anchored.</figcaption>
+    </figure>
+
+    <h3>Proof of authority: known signers instead of anonymous miners</h3>
+    <p>Proof of work exists to order transactions among <em>strangers</em>. Our block producers are not strangers: they are named institutions — archives, libraries, universities, news organizations — each running a node and holding a signing key. A ledger block is valid when co-signed by a supermajority (e.g., two-thirds) of members. This is "proof of authority": no energy expenditure, high throughput, and accountability — a misbehaving signer is identifiable and expellable, the opposite of anonymous mining.</p>
+    <p>Its classic weakness is that the authorities could collude to rewrite history. The anchors neutralize exactly that: any rewrite of anchored epochs would produce roots that fail to match what is buried in Bitcoin, visibly and provably. Collusion can only affect the un-anchored last hour — which is why the anchoring cadence is a security parameter, not a convenience. There is 25 years of precedent for institutions cooperating this way: LOCKSS ("Lots of Copies Keep Stuff Safe") has had libraries jointly preserving digital content since 1999, and CLOCKSS runs 12 archive nodes worldwide under a governance board split evenly between libraries and publishers. More pointedly, the exact architecture proposed here has been field-trialled: <a href="https://arxiv.org/abs/1804.08342">ARCHANGEL</a> (2017–19) ran a proof-of-authority ledger jointly operated by the national archives of the UK, Estonia, Norway, Australia, and the US, each underwriting the others' records. It worked; what it lacked was a sustaining institution after the research grant ended (Section 12).</p>
+
+    <h3>Storage: every node holds everything, forever</h3>
+    <p>A record is roughly 1&nbsp;KB (two hashes, signatures, metadata). <strong>One billion records ≈ 1&nbsp;TB</strong> — a $40 disk. Bitcoin's entire 16-year chain is ~600&nbsp;GB. Full replication at every member node is therefore trivially affordable and is exactly what an archival mission wants: dozens of complete, independently held copies across jurisdictions. The ledger is public — anyone, member or not, may read it, mirror it in full, and serve verification from their copy. The consortium controls <em>writing</em>; nobody controls reading.</p>
+
+    <h3>Membership and governance (to be developed)</h3>
+    <ul>
+      <li><strong>Joining:</strong> admission of a new member (charter criteria + supermajority vote), a key ceremony, and a node bootstrapped from existing copies.</li>
+      <li><strong>Leaving / expulsion:</strong> keys retired on-ledger; past signatures remain valid for the blocks they signed. Departure never invalidates history.</li>
+      <li><strong>Diversity requirement:</strong> members spread across countries and legal systems, so no single government can compel a quorum.</li>
+      <li><strong>Funding:</strong> a patronage-endowment model — sponsors fund the anchoring of specific corpora and institutions, and the endowment pays archives to ingest rather than charging them (Section 13). Operations are cheap (nodes + ~$100/day of anchoring). Deliberately <strong>no token</strong> — see Sections 11 and 13.</li>
+    </ul>
+
+    <h3>Why not the alternatives</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th></th><th>Anchor-only (no own ledger)</th><th>Standalone chain</th><th>Hybrid (chosen)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Security against rewriting</strong></td><td>Inherited from Bitcoin — excellent</td><td>Must be bootstrapped from zero; small chains are cheaply attackable</td><td>Inherited from Bitcoin/Ethereum via anchors — excellent</td></tr>
+          <tr><td><strong>Rich records &amp; attestations</strong></td><td>No — 80 bytes/tx; metadata has nowhere authoritative to live</td><td>Yes</td><td>Yes — on the consortium ledger</td></tr>
+          <tr><td><strong>Governance &amp; custom rules</strong></td><td>None</td><td>Full control</td><td>Full control</td></tr>
+          <tr><td><strong>Operating burden</strong></td><td>Minimal</td><td>Heavy: validator incentives, token economics, attack response</td><td>Modest: consortium nodes + anchor fees</td></tr>
+          <tr><td><strong>Failure coupling</strong></td><td>Fully dependent on host chain</td><td>Independent but fragile</td><td>Multi-chain anchors; migration procedure</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="time">
+    <p class="eyebrow section-label">Section 6</p>
+    <h2>Time: anchored vs. asserted dates</h2>
+    <p>Every record carries two dates, and the system's credibility depends on never blurring them:</p>
+    <ul>
+      <li><strong>Anchored date <span class="tag proven">proven</span></strong> — when the record entered the ledger and was buried in Bitcoin. Machine-generated, never editable, never backdated, under any circumstances. This is the only date the mathematics stands behind.</li>
+      <li><strong>Asserted creation date <span class="tag asserted">asserted</span></strong> — when the registrant claims the artifact was created, carried as signed metadata with cited evidence (accession records, broadcast logs, publication dates) and whatever attestations support it. Testimony — permanent and accountable testimony, but testimony.</li>
+    </ul>
+    <p>Allowing even one backdated chain entry would convert every timestamp in the system from proof into testimony. The rule is absolute; the schema makes misrepresentation structurally impossible by generating the anchored date from the anchoring process itself.</p>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 190" role="img" aria-label="Timeline: an artifact created in 2001 is anchored in 2026, creating a wall; a fabrication generated in 2040 cannot obtain any anchor earlier than 2040.">
+          <defs>
+            <marker id="arwD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <line class="d-line" x1="40" y1="120" x2="870" y2="120" marker-end="url(#arwD)"/>
+          <!-- 2001 -->
+          <line class="d-line-muted d-dash" x1="140" y1="70" x2="140" y2="120"/>
+          <circle cx="140" cy="120" r="4" fill="var(--muted)"/>
+          <text class="d-text" x="140" y="140" text-anchor="middle">2001</text>
+          <text class="d-text-sm" x="140" y="52" text-anchor="middle">artifact created</text>
+          <text class="d-text-sm" x="140" y="65" text-anchor="middle">(asserted, evidenced)</text>
+          <!-- 2026 wall -->
+          <line class="d-line-accent" x1="390" y1="34" x2="390" y2="120" stroke-width="4"/>
+          <circle cx="390" cy="120" r="5" fill="var(--accent)"/>
+          <text class="d-text d-accent-t" x="390" y="140" text-anchor="middle" font-weight="600">2026</text>
+          <text class="d-text d-accent-t" x="390" y="24" text-anchor="middle" font-weight="600">anchored — proven</text>
+          <!-- 2040 fake -->
+          <line class="d-danger-line d-dash" x1="640" y1="70" x2="640" y2="120"/>
+          <circle cx="640" cy="120" r="4" fill="var(--danger)"/>
+          <text class="d-text" x="640" y="140" text-anchor="middle">2040</text>
+          <text class="d-text-sm d-danger-t" x="640" y="52" text-anchor="middle">perfect fake generated —</text>
+          <text class="d-text-sm d-danger-t" x="640" y="65" text-anchor="middle">earliest possible anchor: 2040</text>
+          <!-- blocked arrow from fake toward wall -->
+          <line class="d-danger-line" x1="600" y1="95" x2="420" y2="95" marker-end="url(#arwD)"/>
+          <text class="d-text-sm d-danger-t" x="510" y="86" text-anchor="middle">cannot reach behind the wall</text>
+          <text class="d-text-sm" x="770" y="140" text-anchor="middle">the wall only moves forward</text>
+        </svg>
+      </div>
+      <figcaption><span class="fig-n">Figure 4</span>An anchor is a one-way wall in time. A 2040 fabrication may be visually perfect, but it can never acquire a 2026 anchor — which is why early mass ingestion is the project's most time-critical activity.</figcaption>
+    </figure>
+  </section>
+
+  <section id="attestation">
+    <p class="eyebrow section-label">Section 7</p>
+    <h2>Identity &amp; attestations</h2>
+    <p>The integrity layer answers "is this unaltered and how old is it." Attestations answer "why should I believe it's what it claims to be." An attestation is a small signed statement, itself a ledger record (and therefore anchored): <em>identity X, in role Y, states Z about record R, on evidence E.</em></p>
+    <ul>
+      <li><strong>Identities</strong> are cryptographic keys bound to named entities — primarily institutions at first, whose reputations are the collateral. The registry maintains an identity ledger: key issuance, rotation, and revocation are themselves anchored records, so "who was authorized to speak for the AP in 2026" is permanently answerable.</li>
+      <li><strong>Roles</strong> are typed, not freeform: <em>originating archive</em>, <em>digitizer</em>, <em>independent holder of a matching copy</em>, <em>eyewitness</em>, <em>publication of record</em>. A record's credibility is legible from who signed in which role.</li>
+      <li><strong>Corrections are append-only.</strong> If an attestation proves wrong — or an artifact is exposed as fake — nothing is deleted. A superseding record, signed and anchored, marks the correction. The registry's own mistakes become part of the permanent record; that is a feature, and the only honest option for a system that forbids rewriting.</li>
+      <li><strong>Post-quantum signatures.</strong> Unlike hashes, today's signature schemes (ECDSA, Ed25519) <em>will</em> fall to quantum computers. Attestations are therefore dual-signed — a classical scheme plus a NIST post-quantum scheme (e.g., ML-DSA) — from early on. And because every signature is anchored, even a future forgery of an old key fails: the forged attestation would carry a post-break anchor date.</li>
+      <li><strong>Candidate substrate.</strong> Starling Lab's open-source <a href="https://github.com/starlinglab/authenticated-attributes">Authenticated Attributes</a> — an append-only database of individually signed, timestamped claims keyed to media hashes, with selective disclosure — implements much of this layer already and has been exercised in legal-grade casework (Section 12). Evaluate building on it before writing anything new.</li>
+    </ul>
+  </section>
+
+  <section id="hashes">
+    <p class="eyebrow section-label">Section 8</p>
+    <h2>Hash durability over a century</h2>
+    <p>Could a future supercomputer craft a <em>different</em> document — one that distorts the facts — with the same fingerprint as an anchored original? Three separate threats, three separate answers:</p>
+    <h3>Brute force: no</h3>
+    <p>Finding a second input matching a given SHA-256 hash requires on the order of 2²⁵⁶ attempts. This is not "a very big computer" territory: a computer converting the sun's entire power output into hashing at theoretical thermodynamic limits would not get there in the sun's remaining lifetime. Brute force is off the table permanently, not provisionally.</p>
+    <h3>Quantum computers: no</h3>
+    <p>Grover's algorithm — the best known quantum attack on hashing — only square-roots the work: 2²⁵⁶ becomes 2¹²⁸, still hopelessly out of reach. Hashes are the <em>most</em> quantum-resistant component in the system (signatures are the vulnerable part, handled in Section 7).</p>
+    <h3>Cryptanalytic breaks: the real risk, managed two ways</h3>
+    <p>MD5 and SHA-1 were once trusted and later fell — this is the honest historical worry. But note what "fell" means: they fell to <strong>collision</strong> attacks, where the attacker crafts <em>two documents together, before either is published</em>. Our threat is different. The genuine artifact is already anchored; its hash is fixed. The forger needs a <strong>second preimage</strong> — a new document matching an existing hash — a categorically harder problem. Even MD5, broken for collisions since 2004, has no practical second-preimage attack two decades later. And the forgery would need to be simultaneously byte-level hash-matching <em>and</em> a coherent video advancing a specific false narrative — constraints that fight each other.</p>
+    <p>We still refuse to bet a century on any single algorithm:</p>
+    <ul>
+      <li><strong>Dual hashing.</strong> Every record carries SHA-256 <em>and</em> SHA3-256 — algorithms with unrelated internal designs. A viable forgery must defeat both at once.</li>
+      <li><strong>Hash agility as procedure.</strong> Cryptanalytic declines announce themselves years in advance (SHA-1: theoretical weakness 2005, first real collision 2017). When a successor standard matures or an incumbent shows strain, the corpus is re-hashed under the new algorithm and the mapping is anchored. The old anchors then prove the re-hashing happened <em>before</em> any break — so the chain of integrity never lapses. The system is future-proofed by standing procedure, not by hoping an algorithm holds.</li>
+    </ul>
+    <div class="aside">
+      <span class="aside-label">A practical boundary to hold</span>
+      <p>A cryptographic hash authenticates <em>exact bytes</em>. Re-encode a video or screenshot a photo and the hash changes completely — so copies circulating on social platforms will not match the anchored canonical file. Perceptual fingerprints ("this looks like that") can be stored as advisory metadata to help people <em>find</em> the canonical record, but they are never proof, and the registry must say so plainly.</p>
+    </div>
+  </section>
+
+  <section id="schema">
+    <p class="eyebrow section-label">Section 9</p>
+    <h2>The record schema (first cut)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Nature</th><th>Contents</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="field">content_hashes</td><td><span class="tag proven">proven</span></td><td>SHA-256 and SHA3-256 of the canonical file, with algorithm identifiers.</td></tr>
+          <tr><td class="field">anchored_at</td><td><span class="tag proven">proven</span></td><td>Ledger epoch + anchor transaction references (Bitcoin, Ethereum). Generated by the anchoring process; never human-supplied.</td></tr>
+          <tr><td class="field">registrant</td><td><span class="tag proven">proven</span></td><td>Registered identity that submitted the record, with its signature over all fields.</td></tr>
+          <tr><td class="field">asserted_created</td><td><span class="tag asserted">asserted</span></td><td>Claimed creation date/time and place, with cited evidence (accession records, broadcast logs, publication data).</td></tr>
+          <tr><td class="field">provenance</td><td><span class="tag asserted">asserted</span></td><td>Origin, chain of custody, references into the holding archive's own catalog.</td></tr>
+          <tr><td class="field">descriptor</td><td><span class="tag asserted">asserted</span></td><td>Content type, format, duration/dimensions, human-readable description.</td></tr>
+          <tr><td class="field">attestations</td><td><span class="tag proven">proven</span> signatures over <span class="tag asserted">asserted</span> claims</td><td>Zero or more typed, signed statements (Section 7), each itself anchored.</td></tr>
+          <tr><td class="field">relationships</td><td><span class="tag asserted">asserted</span></td><td>Links to other records: digitization of that master; same event, different camera; supersedes/corrects.</td></tr>
+          <tr><td class="field">c2pa_manifest_hash</td><td><span class="tag proven">proven</span></td><td>For capture-signed content going forward: hash of the C2PA provenance manifest.</td></tr>
+          <tr><td class="field">perceptual_fingerprints</td><td>advisory only</td><td>Similarity fingerprints for discovery. Explicitly non-cryptographic; never proof.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="footnote">Files themselves are never stored or transmitted — only fingerprints and metadata. The hash is only useful while someone still holds a matching file; custody of the files remains with the source archives, which the consortium model conveniently makes the same institutions keeping the ledger.</p>
+  </section>
+
+  <section id="seeding">
+    <p class="eyebrow section-label">Section 10</p>
+    <h2>Seeding the historical record</h2>
+    <p>Retroactive ingestion is a race against time: every year before an artifact is anchored widens the window a future fabrication can exploit (Figure 4). Nothing can produce a cryptographic proof of 2001 for a 2001 tape — the moment of capture is gone — but anchoring it <em>now</em>, with institutional attestation, beats every fake made afterward. The wall moves only forward.</p>
+    <h3>Induction workflow</h3>
+    <p>The holding institution hashes its own files in place (nothing uploaded), signs the batch with its provenance evidence, and submits; the consortium validates and anchors. The institution's attestation is the trust; the anchor makes it permanent. A million-file collection is one overnight hashing job and a few epochs of ledger writes.</p>
+    <h3>Candidate first corpora</h3>
+    <ul>
+      <li><strong>Internet Archive — the September 11 Television Archive.</strong> Continuous off-air recordings of 20 networks from that week: historically critical, heavily conspiracy-targeted, already digital, held by a mission-aligned nonprofit. The natural pilot.</li>
+      <li><strong>Vanderbilt Television News Archive</strong> — systematic U.S. broadcast news recording back to 1968.</li>
+      <li><strong>National archives</strong> (NARA and international counterparts) and the <strong>Library of Congress</strong>.</li>
+      <li><strong>Wire services</strong> — AP and Reuters photo/video archives.</li>
+      <li><strong>Court records, university special collections, Wikimedia Commons.</strong></li>
+    </ul>
+    <p>The pilot doubles as consortium recruitment: the first corpora's holders are exactly the institutions we want operating nodes.</p>
+    <h3>Why the moment favors this (2026)</h3>
+    <ul>
+      <li><strong>The convening exists.</strong> The Library of Congress launched a <a href="https://blogs.loc.gov/thesignal/2026/04/content-authenticity-and-provenance-in-the-age-of-artificial-intelligence-a-call-to-action-for-the-libraries-archives-and-museums-community/">content-authenticity community of practice for libraries, archives &amp; museums</a> in July 2025; its 2026 white paper calls on the sector to make collections verifiable in the AI era. That community — not any single archive's front door — is where this proposal should land.</li>
+      <li><strong>The pilot is easier than it looks.</strong> The Internet Archive already publishes per-file hashes for its holdings — unsigned and unanchored. The pilot proposal is nearly "sign and anchor what you already publish."</li>
+      <li><strong>Courts have named the gap.</strong> In <em>Weinhoffer v. Davie Shoring</em> (5th Cir. 2022), a federal appeals court held Wayback Machine captures are not self-authenticating — institutional custody alone no longer satisfies; anchored, signed attestation is precisely the upgrade the ruling implies.</li>
+    </ul>
+  </section>
+
+  <section id="nongoals">
+    <p class="eyebrow section-label">Section 11</p>
+    <h2>Deliberate non-goals</h2>
+    <ul>
+      <li><strong>No file storage.</strong> The registry holds fingerprints, never content — sidestepping IP ownership entirely and keeping records ~1&nbsp;KB. Preservation of the files themselves remains the archives' mission (LOCKSS, Internet Archive, institutional repositories).</li>
+      <li><strong>No truth adjudication.</strong> The registry never rules on what happened. It makes existence-dates provable and testimony permanent and attributable; judgment belongs to readers, historians, and courts.</li>
+      <li><strong>No token.</strong> A native token would make the attestation layer purchasable — influence flowing to whoever buys the most — in exactly the domain where neutrality is the product. Our securers are named institutions with mission alignment; funding is patronage, dues, and earned certification revenue (Section 13, including the full case against a coin). (Hence also: the working directory name "record_coin" has outlived the design.)</li>
+      <li><strong>No similarity-based authentication.</strong> Perceptual matching is discovery metadata only. The registry's proofs are exact-bytes or nothing, stated plainly.</li>
+    </ul>
+  </section>
+
+  <section id="priorart">
+    <p class="eyebrow section-label">Section 12</p>
+    <h2>Prior art &amp; positioning</h2>
+    <p>A full survey — a 35-year timeline, a capability matrix of fifteen systems, and sources for every claim — lives in the companion document, <a href="provenance-landscape.html"><em>The Provenance Landscape</em></a> (September 2026). Its conclusions, condensed:</p>
+    <ul>
+      <li><strong>The anchoring layer is solved.</strong> OpenTimestamps has provided free, unlimited-scale Bitcoin anchoring since 2016 and demonstrated 750-million-file retroactive ingestion in 2017. We build on it (Section 4), running our own calendar infrastructure.</li>
+      <li><strong>The capture-provenance layer is industry-crowded and leaky.</strong> C2PA ships in real cameras and AI generators, but manifests are stripped by essentially every social platform, recovery is centralized in Adobe's cloud, its trust model is a corporate conformance allowlist, and it has no model for pre-C2PA historical material. Our registry sits <em>above</em> C2PA — ingesting its manifests as one input class — not against it.</li>
+      <li><strong>The two layers this project actually consists of are unbuilt.</strong> No public registry of institutional attestations over the historical record exists anywhere, and no provenance system has century-scale governance. The nearest technical relative, Starling Lab (Stanford/USC), has validated our full stack — multi-chain hash anchoring, signed attestations on hashes, even multi-institution corroboration prototypes — but at curated case-study scale (its flagship retro-authentication project sealed 131 photos), with no open registry and grant-dependent permanence. It is a natural founding partner, not a competitor.</li>
+      <li><strong>The direct precedent is a ghost.</strong> ARCHANGEL (2017–19) trialled our precise consortium architecture across five national archives, succeeded technically, and dissolved when its grant ended — for organizational reasons, not cryptographic ones. Its post-mortem is required reading before any institutional pitch, and its participants are warm leads.</li>
+      <li><strong>The graveyard's lesson is the design brief.</strong> Every operator-dependent system decayed: Surety flickering after 30 years of valid proofs, Guardtime (Estonia's national ledger operator) down to ~1 employee, Stampery's verification portal a dead URL, Tierion and Factom broken on token economics. Proofs outlived every operator. The survivable pattern — consortium stewardship, self-contained proofs verifiable without any live service, public-chain anchoring as operator-independent backstop, planned algorithm renewal — has never been combined in one system. That combination is this project.</li>
+      <li><strong>Law has moved toward us.</strong> eIDAS 2.0 (EU, 2024) created "qualified electronic ledgers" with legal presumption of chronology and integrity — the first regulatory template for this architecture; China's courts presume anchored evidence untampered post-anchoring while demanding separate proof of pre-anchoring authenticity (exactly our proven/asserted split); several US states have admissibility statutes. Qualified-ledger status is worth designing toward.</li>
+    </ul>
+    <p><strong>Positioning, in one sentence:</strong> the Anchored Record is not a new protocol but a missing institution — the consortium-governed attestation registry that ARCHANGEL prototyped, Starling's tooling enables, the Library of Congress community is newly convened to want, and no one has yet built to last a century.</p>
+  </section>
+
+  <section id="incentives">
+    <p class="eyebrow section-label">Section 13</p>
+    <h2>Incentives &amp; sustainability</h2>
+    <p>The prior-art graveyard has one consistent cause of death: the people who had to do the work got nothing they valued for doing it. ARCHANGEL's archives got a research paper; ACE's subscribers got a mailing list; token-funded ventures got securities actions. This section is the design against that failure mode. The settled model is <strong>patronage</strong>: deep-pocketed individuals and organizations fund the anchoring of specific archives and collections, and every other incentive is built around that spine.</p>
+
+    <h3>The patron model: sponsor a corpus</h3>
+    <p>The core giving product is naming-rights economics applied to memory. A patron funds the ingestion and perpetual anchoring of a named collection — <em>"The September 11 Television Archive, anchored in perpetuity by the ___ Foundation"</em> — and the sponsorship itself becomes a signed, anchored record in the ledger: permanent, public credit beside the history it preserved. Patronage has two properties most philanthropy lacks:</p>
+    <ul>
+      <li><strong>Permanence per dollar.</strong> A one-time gift anchors a corpus forever. There is no ongoing burn to sustain the impact — the anchors are already immortal; the endowment only funds new ingestion and node operations.</li>
+      <li><strong>Legible, bounded asks.</strong> "Fund the anchoring of the Apollo program archive" is a concrete, completable, emotionally resonant project — the shape of gift that built every named library wing in existence — rather than an open-ended operating subsidy.</li>
+    </ul>
+    <p>Solicitation targets, in order of fit: foundations already funding information integrity and AI-risk work; crypto-ecosystem philanthropy with a track record in this exact niche (the Filecoin Foundation gave the Internet Archive $10M; Protocol Labs bankrolls Starling Lab; retroactive public-goods programs fund open infrastructure); AI companies, whose reputational need for provenance infrastructure is acute and growing; and individual patrons for whom permanent named association with preserved history is the draw.</p>
+
+    <h3>What each participant gets</h3>
+    <ul>
+      <li><strong>Archives &amp; libraries — trust insurance, revenue, and prestige.</strong> Post-<em>Weinhoffer</em>, institutional custody alone no longer satisfies courts; anchored attestation makes holdings self-authenticating again — insurance for the archive's core asset, its authority. Joining is engineered to near-zero cost ("sign and anchor what you already publish"), and the endowment pays <strong>ingestion bounties</strong> for named, vetted collections — archives are paid to participate, never charged. Founding membership confers a permanent, visible role: every future verification of a sponsored corpus displays the attesting institution's name.</li>
+      <li><strong>Patrons — permanent named credit</strong>, recorded in the same unrewritable ledger as the history itself.</li>
+      <li><strong>The AI industry — certified pre-AI data.</strong> Data created before generative AI is acquiring the status of low-background steel: valuable precisely because it is provably uncontaminated, and an anchor date is the only retroactively unfakeable proof of that. Certifying "verified pre-AI" corpora for model training and evaluation is a genuine earned-revenue line whose buyers have real budgets — and the same anchors serve historians and dataset auditors alike.</li>
+      <li><strong>Members mutually — the network effect.</strong> Consortium members countersign one another's holdings (ARCHANGEL's mutual-underwriting idea, made a charter obligation): each new member adds independent attesters and jurisdictions to every existing member's collections, so membership value rises with membership — a real network effect, without a token.</li>
+      <li><strong>The public — free verification, forever</strong>, plus a visible <strong>coverage map</strong> ("23% of major broadcast history anchored; these collections are not") that converts the remaining gap into standing public pressure and recurring journalism.</li>
+    </ul>
+
+    <h3>Why not a native coin</h3>
+    <p>The question every crypto-literate reader will ask, considered seriously and answered structurally:</p>
+    <ul>
+      <li><strong>Token incentives only work where the rewarded work is machine-verifiable.</strong> Bitcoin pays for hashes computed; Filecoin pays for bytes provably held — protocols can check both, so rewards can't corrupt the work. Our scarce input is <em>truthful institutional testimony</em>, which no protocol can verify. Reward what's measurable (records registered) and you invite farming junk hashes for coins; reward what matters (attestation) and you have literally priced testimony — the credibility-for-sale failure this registry exists to fight.</li>
+      <li><strong>The securities precedent is in our own survey.</strong> Tierion settled with the SEC and refunded $25M; Factom's token dragged it into liquidation. "Buy coins as an investment in the registry" is close to a textbook unregistered security.</li>
+      <li><strong>A coin repels the essential participants.</strong> National archives and university libraries cannot hold speculative assets, and the explanation tax with courts, journalists, and archivists spends the one currency — credibility — the project cannot mint more of.</li>
+      <li><strong>Token treasuries are pro-cyclical</strong> — flush in manias, collapsed in winters — the opposite of the endowment behavior a century-scale institution requires.</li>
+    </ul>
+    <p>The crypto world's contribution is welcome as <em>funding and rails</em> — its philanthropy already underwrites this mission's nearest relatives, and its chains are our anchor — but the registry itself issues nothing tradeable.</p>
+
+    <div class="claim">
+      <span class="claim-label">The inviolable line</span>
+      Money buys <strong>service and credit</strong> — ingestion, certification, tooling, permanent patron records. Money never buys <strong>attestation content</strong>. No payment, sponsorship, or membership tier confers any influence over what any institution attests, and the charter makes this unamendable. The moment credibility is purchasable, the registry is a slower version of the problem it fights.
+    </div>
+
+    <h3>The funding tripod, summarized</h3>
+    <ul>
+      <li><strong>Patron endowment</strong> — sponsor-a-corpus gifts and general endowment; funds operations, node grants, and ingestion bounties.</li>
+      <li><strong>Member dues</strong> — modest, CLOCKSS-style, sized as insurance premiums on institutional authority; waived where hardship would exclude a valuable member.</li>
+      <li><strong>Earned revenue</strong> — certified pre-AI corpus licensing for the AI industry; authenticated-evidence services for courts and publishers. Grows with exactly the forces (AI proliferation) that grow the mission's urgency.</li>
+    </ul>
+  </section>
+
+  <section id="open">
+    <p class="eyebrow section-label">Section 14</p>
+    <h2>Open questions</h2>
+    <ol class="body-list">
+      <li><strong>Governance capture — and governance survival.</strong> Charter design: admission criteria, quorum rules, jurisdictional distribution, and what happens if a majority of members are compelled or corrupted. The anchors protect the past; governance protects the future. First research task: the ARCHANGEL post-mortem — why did five national archives that successfully trialled this architecture let it lapse, and what (budget line, legal entity, mandate) would have made them continue?</li>
+      <li><strong>Attestation trust UX.</strong> How does a skeptical citizen in 2080 <em>read</em> a web of institutional signatures without simply being told "trust these institutions"? Reputation surfacing, competing attestations, and dispute records need design.</li>
+      <li><strong>Verification experience.</strong> The cryptography allows trustless verification; the tooling must make it a one-click act for a non-technical person, including offline.</li>
+      <li><strong>The canonical-file problem.</strong> Most people encounter re-encoded copies that won't hash-match. What's the path from "a copy in my feed" to "the anchored canonical record"?</li>
+      <li><strong>Individual registrants.</strong> V1 is institutional. When and how do individuals (journalists, eyewitnesses) register content, and how is spam/poisoning of the ledger priced out without excluding the powerless?</li>
+      <li><strong>Legal standing.</strong> What would it take for anchored records and receipts to be recognized as evidence of date-of-existence in court? Concretely: is eIDAS 2.0 "qualified electronic ledger" certification achievable for a consortium ledger, and what would it require of the operators? No court has yet accepted an OpenTimestamps-style proof by name — a first-mover opportunity for a well-run registry.</li>
+      <li><strong>Funding &amp; permanence.</strong> Endowment sizing for a century of operations; successor stewardship if the founding organization dies (the data survives regardless — who keeps operating?).</li>
+      <li><strong>The name.</strong> "The Anchored Record" is a working title.</li>
+    </ol>
+  </section>
+
+  <section id="glossary">
+    <p class="eyebrow section-label">Section 15</p>
+    <h2>Glossary</h2>
+    <dl class="glossary">
+      <dt>Hash</dt><dd>A fixed-size fingerprint (32 bytes here) computed from any input; any change to the input changes it completely. One-way and binding.</dd>
+      <dt>Second preimage</dt><dd>A different input matching an <em>existing</em> hash — the forgery our adversary needs, and much harder than a collision (two crafted-together inputs).</dd>
+      <dt>Block</dt><dd>A batch of ledger entries that includes the hash of the previous block, chaining history together.</dd>
+      <dt>Node</dt><dd>A computer holding a copy of a ledger and validating new blocks.</dd>
+      <dt>Miner</dt><dd>A Bitcoin node competing to add the next block by brute-force search; paid in fees and new coins.</dd>
+      <dt>Proof of work</dt><dd>Security from provably expended computation; rewriting history means redoing it all, faster than the whole network.</dd>
+      <dt>Proof of authority</dt><dd>Security from named, accountable signers; blocks valid when a quorum co-signs.</dd>
+      <dt>Confirmation</dt><dd>Each block mined after yours; ~6 confirmations (~1 hour) is Bitcoin's conventional "settled."</dd>
+      <dt>Merkle tree / proof</dt><dd>Pairwise hashing that commits millions of records to one 32-byte root; a proof is the ~log₂(n) sibling hashes linking one record to that root.</dd>
+      <dt>OP_RETURN</dt><dd>The ~80-byte arbitrary-data field of a Bitcoin transaction; where our epoch roots live.</dd>
+      <dt>Anchor</dt><dd>Publishing an epoch's Merkle root into an external chain, renting its unrewritability.</dd>
+      <dt>Epoch</dt><dd>The fixed interval (e.g., one hour) of registry records batched under a single anchored root.</dd>
+      <dt>C2PA</dt><dd>Industry standard for capture-time provenance — cameras and tools cryptographically signing content at creation.</dd>
+    </dl>
+  </section>
+
+</div>
