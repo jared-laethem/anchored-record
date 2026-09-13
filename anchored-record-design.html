@@ -304,13 +304,13 @@
 <div class="page">
 
   <header class="doc-header">
-    <p class="eyebrow">Design Document · Draft 3</p>
+    <p class="eyebrow">Design Document · Draft 4</p>
     <h1>The Anchored Record</h1>
     <p class="subtitle">A permanent public registry that lets anyone, at any point in the future, verify that a document existed at a known date, unaltered — and see exactly who vouched for it.</p>
     <div class="doc-meta">
       <span>Working name — see open questions</span>
       <span>September 2026</span>
-      <span>Status: concept &amp; architecture · Draft 3 adds the patronage funding model</span>
+      <span>Status: concept &amp; architecture · Draft 4 adds the build-out plan</span>
     </div>
   </header>
 
@@ -330,8 +330,9 @@
       <li><span class="n">11</span><a href="#nongoals">Deliberate non-goals</a></li>
       <li><span class="n">12</span><a href="#priorart">Prior art &amp; positioning</a></li>
       <li><span class="n">13</span><a href="#incentives">Incentives &amp; sustainability</a></li>
-      <li><span class="n">14</span><a href="#open">Open questions</a></li>
-      <li><span class="n">15</span><a href="#glossary">Glossary</a></li>
+      <li><span class="n">14</span><a href="#buildout">Build-out plan</a></li>
+      <li><span class="n">15</span><a href="#open">Open questions</a></li>
+      <li><span class="n">16</span><a href="#glossary">Glossary</a></li>
     </ol>
   </nav>
 
@@ -915,8 +916,50 @@
     </ul>
   </section>
 
-  <section id="open">
+  <section id="buildout">
     <p class="eyebrow section-label">Section 14</p>
+    <h2>Build-out plan</h2>
+    <p>The sequencing principle comes from a fact the architecture makes available: <strong>anchoring and attestation are separable, and only anchoring is a race.</strong> An anchor must exist before the fakes do; an institution's signed attestation can attach to an already-anchored hash years later, and the early anchor date still holds. Anchoring public content requires no one's permission — a single operator demonstrably can do it at hundreds-of-millions-of-files scale (Todd, 2017). So the plan front-loads everything that can be done unilaterally, and approaches institutions with a running system rather than a proposal. Every ARCHANGEL archive joined a proposal that then needed them to survive; this plan inverts that.</p>
+
+    <h3>Phase 0 — Prime the pump (solo; no partners required)</h3>
+    <ol class="body-list">
+      <li><strong>Anchor the project itself.</strong> OpenTimestamps-anchor this repository and document history. Trivial effort; teaches the toolchain end to end; the project's own provenance becomes its first anchored record.</li>
+      <li><strong>Build the ingestion pipeline, dogfooding the schema.</strong> A tool that takes a directory, computes SHA-256 + SHA3-256, assembles Section-9 records (asserted dates, provenance notes, registrant signature), Merkle-batches, anchors via OpenTimestamps, and emits self-contained receipts. This is both the prototype of the real system and the instrument for everything below.</li>
+      <li><strong>Anchor a fully public, downloadable, iconic corpus.</strong> Lead candidate: <strong>NASA's Apollo program archive</strong> — public domain, hosted for download by NASA, and heavily conspiracy-targeted, so the demonstration lands. Alternates/additions: Library of Congress digital collections, NARA's catalog, Wikimedia Commons featured media. Stated honestly as third-party registration ("these exact files, as NASA published them, existed unaltered as of 2026"), not custodial attestation — the part that cannot be done later, done now.</li>
+      <li><strong>Ship the public verify page.</strong> Drag a file and a receipt onto a static page; green or red; works offline. The ten-second demo that makes the idea legible to a patron or an archive director.</li>
+      <li><strong>Publish the coverage map.</strong> The major historical corpora, anchored vs. not — almost everything "not." Advocacy artifact, recurring-journalism bait, and the frame that makes each new anchor a visible filled-in square.</li>
+      <li><strong>Anchor the Internet Archive's published metadata.</strong> IA publishes per-file hashes through its public API; anchoring those manifests fences the <em>claimed contents</em> of restricted collections (the September 11 Television Archive included) behind the wall at zero cost — a weaker guarantee (self-reported, older algorithms), held honestly as such, while the custodial pilot is courted.</li>
+    </ol>
+
+    <h3>Phase 1 — First partners (one institution, one patron)</h3>
+    <ol class="body-list">
+      <li><strong>The ARCHANGEL post-mortem</strong> (open question 1) — before any pitch, learn why five national archives let a working trial lapse; its participants are also warm leads.</li>
+      <li><strong>Court Starling Lab</strong> as founding technical partner; evaluate Authenticated Attributes as the attestation substrate (Section 7).</li>
+      <li><strong>Enter through the Library of Congress G+LAM community</strong> with Phase 0 in hand: live pipeline, anchored Apollo corpus, verify page, coverage map.</li>
+      <li><strong>Convert the IA relationship</strong>: from anchored-manifests (Phase 0.6) to the real custodial pilot — IA signs and anchors what it already publishes; the September 11 Television Archive becomes the first attested corpus.</li>
+      <li><strong>Land the first patron</strong> against a named corpus, using the prospectus distilled from Sections 13–14.</li>
+    </ol>
+
+    <h3>Phase 2 — Consortium formation</h3>
+    <ol class="body-list">
+      <li>Charter (admission, quorum, jurisdictional spread, the inviolable line of Section 13), legal entity, and the first 5–10 member institutions operating nodes.</li>
+      <li>Migrate from OpenTimestamps-only anchoring to the full consortium ledger of Section 5, with Ethereum as the second anchor chain; all Phase 0–1 receipts carry forward unchanged.</li>
+      <li>Mutual underwriting begins: members countersign one another's holdings; the network effect starts compounding.</li>
+      <li>Begin the eIDAS 2.0 qualified-ledger assessment (open question 6).</li>
+    </ol>
+
+    <h3>Phase 3 — Scale</h3>
+    <ol class="body-list">
+      <li>Mass ingestion bounty program across national archives, broadcast archives, and wire services.</li>
+      <li>Launch pre-AI corpus certification for the AI industry (Section 13) — the earned-revenue engine.</li>
+      <li>Individual-registrant on-ramps (open question 5), C2PA manifest ingestion as a standing input class, and endowment campaign to century-scale sizing.</li>
+    </ol>
+
+    <p class="footnote">Phase 0 is deliberately buildable by one or two people. Its output is not a demo for its own sake — every receipt it produces remains valid in the final system, and every month of delay is a month of anchor dates lost.</p>
+  </section>
+
+  <section id="open">
+    <p class="eyebrow section-label">Section 15</p>
     <h2>Open questions</h2>
     <ol class="body-list">
       <li><strong>Governance capture — and governance survival.</strong> Charter design: admission criteria, quorum rules, jurisdictional distribution, and what happens if a majority of members are compelled or corrupted. The anchors protect the past; governance protects the future. First research task: the ARCHANGEL post-mortem — why did five national archives that successfully trialled this architecture let it lapse, and what (budget line, legal entity, mandate) would have made them continue?</li>
@@ -931,7 +974,7 @@
   </section>
 
   <section id="glossary">
-    <p class="eyebrow section-label">Section 15</p>
+    <p class="eyebrow section-label">Section 16</p>
     <h2>Glossary</h2>
     <dl class="glossary">
       <dt>Hash</dt><dd>A fixed-size fingerprint (32 bytes here) computed from any input; any change to the input changes it completely. One-way and binding.</dd>
