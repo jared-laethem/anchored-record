@@ -304,13 +304,13 @@
 <div class="page">
 
   <header class="doc-header">
-    <p class="eyebrow">Design Document · Draft 4</p>
+    <p class="eyebrow">Design Document · Draft 5</p>
     <h1>The Anchored Record</h1>
     <p class="subtitle">A permanent public registry that lets anyone, at any point in the future, verify that a document existed at a known date, unaltered — and see exactly who vouched for it.</p>
     <div class="doc-meta">
       <span>Working name — see open questions</span>
       <span>September 2026</span>
-      <span>Status: concept &amp; architecture · Draft 4 adds the build-out plan</span>
+      <span>Status: concept &amp; architecture · Draft 5 adds content addressing &amp; preservation-awareness</span>
     </div>
   </header>
 
@@ -815,11 +815,28 @@
           <tr><td class="field">attestations</td><td><span class="tag proven">proven</span> signatures over <span class="tag asserted">asserted</span> claims</td><td>Zero or more typed, signed statements (Section 7), each itself anchored.</td></tr>
           <tr><td class="field">relationships</td><td><span class="tag asserted">asserted</span></td><td>Links to other records: digitization of that master; same event, different camera; supersedes/corrects.</td></tr>
           <tr><td class="field">c2pa_manifest_hash</td><td><span class="tag proven">proven</span></td><td>For capture-signed content going forward: hash of the C2PA provenance manifest.</td></tr>
+          <tr><td class="field">content_address</td><td><span class="tag proven">proven</span></td><td>Permanent peer-to-peer addresses for the canonical bytes — IPFS CID and BitTorrent infohash — computed deterministically from the same file the hashes fingerprint, so retrieval identity and verification identity are cryptographically linked. Recorded for every file; resolvable only while someone hosts a copy (see below).</td></tr>
           <tr><td class="field">perceptual_fingerprints</td><td>advisory only</td><td>Similarity fingerprints for discovery. Explicitly non-cryptographic; never proof.</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="footnote">Files themselves are never stored or transmitted — only fingerprints and metadata. The hash is only useful while someone still holds a matching file; custody of the files remains with the source archives, which the consortium model conveniently makes the same institutions keeping the ledger.</p>
+    <p class="footnote">Files themselves are never stored or transmitted by the registry — only fingerprints, addresses, and metadata. Custody of the files remains with the source archives, which the consortium model conveniently makes the same institutions keeping the ledger.</p>
+
+    <h3>Preservation without custody: the hash is the address</h3>
+    <p>A registry of hashes has an obvious dependency: a fingerprint is only useful while someone, somewhere, still holds a matching file. If the last copy disappears — or merely gets re-encoded everywhere — the anchor points at nothing. The registry never takes custody of files, but it can make their survival dramatically more likely, because of a property of peer-to-peer networks that fits this design like a glove: <strong>on content-addressed networks, the hash <em>is</em> the address.</strong></p>
+    <p>On IPFS, a file's identifier (its CID) is derived from its content; on BitTorrent, a magnet link is the hash of the torrent's contents. The address doesn't say <em>where</em> the file lives — it says <em>what</em> the file is, and the network locates anyone currently holding matching bytes. Three consequences:</p>
+    <ul>
+      <li><strong>Moving cannot break the link.</strong> There is no server to die and no URL to rot; as long as anyone on earth hosts the file, the address in the record resolves.</li>
+      <li><strong>Retrieval is self-verifying.</strong> Whatever the network returns is checked against the address itself — a tampered file cannot be served at a content address, so fetching and verifying collapse into one act.</li>
+      <li><strong>Preservation is permissionless and additive.</strong> Anyone can start hosting a registered file at any time, forever, and the record's address needs no update — the same "separable and later-attachable" property the design exploits for attestation.</li>
+    </ul>
+    <p>The honest limitation, kept crisp because many projects fudge it: <strong>a content address is permanent; the content's availability is not.</strong> IPFS is a naming system over volunteers, not a hard drive in the sky — bytes persist only while someone "pins" (hosts) them. So permanence decomposes into a permanent address (free, automatic) plus an ongoing commitment to hold bytes, and the registry leans on three compatible mechanisms for the second half:</p>
+      <ul>
+      <li><strong>Institutional pinning — the primary mechanism.</strong> Consortium members pin one another's registered public-domain corpora: LOCKSS's founding principle ("lots of copies keep stuff safe") ported to content addressing, and folded into the mutual-underwriting obligation of Section 13 — members countersign <em>and co-host</em>. Storage at these scales is a rounding error for a university library.</li>
+      <li><strong>Paid-permanence networks.</strong> Filecoin (renewable storage deals with on-chain proofs the host still holds the data — where Starling Lab keeps the Shoah testimony archive) and Arweave (a one-time payment into a storage endowment) let a patron gift buy <em>hosting</em> permanence, not just anchoring.</li>
+      <li><strong>BitTorrent for the iconic.</strong> Twenty-plus years of demonstrated survival for anything the public cares about, at zero institutional cost.</li>
+    </ul>
+    <p>Scope boundaries: this applies in full only to material that may lawfully be redistributed (public domain and licensed collections); copyrighted holdings stay hash-plus-custodian as designed, with the content address recorded anyway — dormant — so preservation can attach to the existing record the day the material enters the public domain. And content addressing does not touch the re-encoding problem (open question 4): a transcode is genuinely different bytes, handled as a related record. It helps only at the margin — when the canonical file is always fetchable at a permanent address, the world has less reason to circulate lossy copies at all.</p>
   </section>
 
   <section id="seeding">
@@ -849,7 +866,7 @@
     <p class="eyebrow section-label">Section 11</p>
     <h2>Deliberate non-goals</h2>
     <ul>
-      <li><strong>No file storage.</strong> The registry holds fingerprints, never content — sidestepping IP ownership entirely and keeping records ~1&nbsp;KB. Preservation of the files themselves remains the archives' mission (LOCKSS, Internet Archive, institutional repositories).</li>
+      <li><strong>No file custody — but preservation-aware.</strong> The registry holds fingerprints and content addresses, never content — sidestepping IP ownership entirely and keeping records ~1&nbsp;KB. Preservation of the files themselves remains the archives' mission (LOCKSS, Internet Archive, institutional repositories), reinforced by the content-addressing and pinning mechanisms of Section 9: the registry points permanently at the bytes and organizes others to hold them, without ever holding them itself.</li>
       <li><strong>No truth adjudication.</strong> The registry never rules on what happened. It makes existence-dates provable and testimony permanent and attributable; judgment belongs to readers, historians, and courts.</li>
       <li><strong>No token.</strong> A native token would make the attestation layer purchasable — influence flowing to whoever buys the most — in exactly the domain where neutrality is the product. Our securers are named institutions with mission alignment; funding is patronage, dues, and earned certification revenue (Section 13, including the full case against a coin). (Hence also: the working directory name "record_coin" has outlived the design.)</li>
       <li><strong>No similarity-based authentication.</strong> Perceptual matching is discovery metadata only. The registry's proofs are exact-bytes or nothing, stated plainly.</li>
@@ -877,7 +894,7 @@
     <p>The prior-art graveyard has one consistent cause of death: the people who had to do the work got nothing they valued for doing it. ARCHANGEL's archives got a research paper; ACE's subscribers got a mailing list; token-funded ventures got securities actions. This section is the design against that failure mode. The settled model is <strong>patronage</strong>: deep-pocketed individuals and organizations fund the anchoring of specific archives and collections, and every other incentive is built around that spine.</p>
 
     <h3>The patron model: sponsor a corpus</h3>
-    <p>The core giving product is naming-rights economics applied to memory. A patron funds the ingestion and perpetual anchoring of a named collection — <em>"The September 11 Television Archive, anchored in perpetuity by the ___ Foundation"</em> — and the sponsorship itself becomes a signed, anchored record in the ledger: permanent, public credit beside the history it preserved. Patronage has two properties most philanthropy lacks:</p>
+    <p>The core giving product is naming-rights economics applied to memory. A patron funds the ingestion and perpetual anchoring of a named collection — <em>"The September 11 Television Archive, anchored in perpetuity by the ___ Foundation"</em> — and, for redistributable collections, its perpetual <em>hosting</em> as well (Arweave/Filecoin permanence plus consortium pinning, Section 9): anchored <em>and</em> replicated, in one gift. The sponsorship itself becomes a signed, anchored record in the ledger: permanent, public credit beside the history it preserved. Patronage has two properties most philanthropy lacks:</p>
     <ul>
       <li><strong>Permanence per dollar.</strong> A one-time gift anchors a corpus forever. There is no ongoing burn to sustain the impact — the anchors are already immortal; the endowment only funds new ingestion and node operations.</li>
       <li><strong>Legible, bounded asks.</strong> "Fund the anchoring of the Apollo program archive" is a concrete, completable, emotionally resonant project — the shape of gift that built every named library wing in existence — rather than an open-ended operating subsidy.</li>
@@ -889,7 +906,7 @@
       <li><strong>Archives &amp; libraries — trust insurance, revenue, and prestige.</strong> Post-<em>Weinhoffer</em>, institutional custody alone no longer satisfies courts; anchored attestation makes holdings self-authenticating again — insurance for the archive's core asset, its authority. Joining is engineered to near-zero cost ("sign and anchor what you already publish"), and the endowment pays <strong>ingestion bounties</strong> for named, vetted collections — archives are paid to participate, never charged. Founding membership confers a permanent, visible role: every future verification of a sponsored corpus displays the attesting institution's name.</li>
       <li><strong>Patrons — permanent named credit</strong>, recorded in the same unrewritable ledger as the history itself.</li>
       <li><strong>The AI industry — certified pre-AI data.</strong> Data created before generative AI is acquiring the status of low-background steel: valuable precisely because it is provably uncontaminated, and an anchor date is the only retroactively unfakeable proof of that. Certifying "verified pre-AI" corpora for model training and evaluation is a genuine earned-revenue line whose buyers have real budgets — and the same anchors serve historians and dataset auditors alike.</li>
-      <li><strong>Members mutually — the network effect.</strong> Consortium members countersign one another's holdings (ARCHANGEL's mutual-underwriting idea, made a charter obligation): each new member adds independent attesters and jurisdictions to every existing member's collections, so membership value rises with membership — a real network effect, without a token.</li>
+      <li><strong>Members mutually — the network effect.</strong> Consortium members countersign one another's holdings <em>and pin what they attest</em> (Section 9): ARCHANGEL's mutual-underwriting idea plus LOCKSS's replication, made a single charter obligation. Each new member adds independent attesters, jurisdictions, and hosted copies to every existing member's collections, so membership value rises with membership — a real network effect, without a token.</li>
       <li><strong>The public — free verification, forever</strong>, plus a visible <strong>coverage map</strong> ("23% of major broadcast history anchored; these collections are not") that converts the remaining gap into standing public pressure and recurring journalism.</li>
     </ul>
 
@@ -925,7 +942,7 @@
     <ol class="body-list">
       <li><strong>Anchor the project itself.</strong> OpenTimestamps-anchor this repository and document history. Trivial effort; teaches the toolchain end to end; the project's own provenance becomes its first anchored record.</li>
       <li><strong>Build the ingestion pipeline, dogfooding the schema.</strong> A tool that takes a directory, computes SHA-256 + SHA3-256, assembles Section-9 records (asserted dates, provenance notes, registrant signature), Merkle-batches, anchors via OpenTimestamps, and emits self-contained receipts. This is both the prototype of the real system and the instrument for everything below.</li>
-      <li><strong>Anchor a fully public, downloadable, iconic corpus.</strong> Lead candidate: <strong>NASA's Apollo program archive</strong> — public domain, hosted for download by NASA, and heavily conspiracy-targeted, so the demonstration lands. Alternates/additions: Library of Congress digital collections, NARA's catalog, Wikimedia Commons featured media. Stated honestly as third-party registration ("these exact files, as NASA published them, existed unaltered as of 2026"), not custodial attestation — the part that cannot be done later, done now.</li>
+      <li><strong>Anchor a fully public, downloadable, iconic corpus.</strong> Lead candidate: <strong>NASA's Apollo program archive</strong> — public domain, hosted for download by NASA, and heavily conspiracy-targeted, so the demonstration lands. Alternates/additions: Library of Congress digital collections, NARA's catalog, Wikimedia Commons featured media. Stated honestly as third-party registration ("these exact files, as NASA published them, existed unaltered as of 2026"), not custodial attestation — the part that cannot be done later, done now. Being public domain, the corpus is also pinned to IPFS, seeded on BitTorrent, and (patron permitting) written to Arweave — making the pilot a complete demonstration: <em>anchored, addressed, and hosted, by one operator, permission from no one.</em></li>
       <li><strong>Ship the public verify page.</strong> Drag a file and a receipt onto a static page; green or red; works offline. The ten-second demo that makes the idea legible to a patron or an archive director.</li>
       <li><strong>Publish the coverage map.</strong> The major historical corpora, anchored vs. not — almost everything "not." Advocacy artifact, recurring-journalism bait, and the frame that makes each new anchor a visible filled-in square.</li>
       <li><strong>Anchor the Internet Archive's published metadata.</strong> IA publishes per-file hashes through its public API; anchoring those manifests fences the <em>claimed contents</em> of restricted collections (the September 11 Television Archive included) behind the wall at zero cost — a weaker guarantee (self-reported, older algorithms), held honestly as such, while the custodial pilot is courted.</li>
@@ -990,6 +1007,8 @@
       <dt>Anchor</dt><dd>Publishing an epoch's Merkle root into an external chain, renting its unrewritability.</dd>
       <dt>Epoch</dt><dd>The fixed interval (e.g., one hour) of registry records batched under a single anchored root.</dd>
       <dt>C2PA</dt><dd>Industry standard for capture-time provenance — cameras and tools cryptographically signing content at creation.</dd>
+      <dt>Content address</dt><dd>A peer-to-peer identifier derived from a file's content (an IPFS CID, a BitTorrent magnet link): it names <em>what</em> the file is rather than where it lives, resolves wherever a copy is hosted, and cannot serve tampered bytes.</dd>
+      <dt>Pinning</dt><dd>Committing to keep hosting a file at its content address. Addresses are permanent; availability lasts only as long as someone pins.</dd>
     </dl>
   </section>
 
