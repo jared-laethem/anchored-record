@@ -816,6 +816,7 @@
           <tr><td class="field">relationships</td><td><span class="tag asserted">asserted</span></td><td>Links to other records: digitization of that master; same event, different camera; supersedes/corrects.</td></tr>
           <tr><td class="field">c2pa_manifest_hash</td><td><span class="tag proven">proven</span></td><td>For capture-signed content going forward: hash of the C2PA provenance manifest.</td></tr>
           <tr><td class="field">content_address</td><td><span class="tag proven">proven</span></td><td>Permanent peer-to-peer addresses for the canonical bytes — IPFS CID and BitTorrent infohash — computed deterministically from the same file the hashes fingerprint, so retrieval identity and verification identity are cryptographically linked. Recorded for every file; resolvable only while someone hosts a copy (see below).</td></tr>
+          <tr><td class="field">known_locations</td><td><span class="tag asserted">asserted</span></td><td>Ordinary URLs where the file is published today (the holder's own site, an archive's catalog page). Courtesy pointers for discovery — location-addressed, mutable, rot-prone, never load-bearing for verification; refreshed over time via superseding records. Anything fetched from one is checked against the hashes, not trusted from the source.</td></tr>
           <tr><td class="field">perceptual_fingerprints</td><td>advisory only</td><td>Similarity fingerprints for discovery. Explicitly non-cryptographic; never proof.</td></tr>
         </tbody>
       </table>
