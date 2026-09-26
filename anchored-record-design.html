@@ -304,13 +304,13 @@
 <div class="page">
 
   <header class="doc-header">
-    <p class="eyebrow">Design Document · Draft 5</p>
+    <p class="eyebrow">Design Document · Draft 6</p>
     <h1>The Anchored Record</h1>
     <p class="subtitle">A permanent public registry that lets anyone, at any point in the future, verify that a document existed at a known date, unaltered — and see exactly who vouched for it.</p>
     <div class="doc-meta">
       <span>Working name — see open questions</span>
       <span>September 2026</span>
-      <span>Status: concept &amp; architecture · Draft 5 adds content addressing &amp; preservation-awareness</span>
+      <span>Status: concept &amp; architecture · Draft 6 adds rights-gating &amp; takedown design for content addresses</span>
     </div>
   </header>
 
@@ -770,7 +770,7 @@
     <ul>
       <li><strong>Identities</strong> are cryptographic keys bound to named entities — primarily institutions at first, whose reputations are the collateral. The registry maintains an identity ledger: key issuance, rotation, and revocation are themselves anchored records, so "who was authorized to speak for the AP in 2026" is permanently answerable.</li>
       <li><strong>Roles</strong> are typed, not freeform: <em>originating archive</em>, <em>digitizer</em>, <em>independent holder of a matching copy</em>, <em>eyewitness</em>, <em>publication of record</em>. A record's credibility is legible from who signed in which role.</li>
-      <li><strong>Corrections are append-only.</strong> If an attestation proves wrong — or an artifact is exposed as fake — nothing is deleted. A superseding record, signed and anchored, marks the correction. The registry's own mistakes become part of the permanent record; that is a feature, and the only honest option for a system that forbids rewriting.</li>
+      <li><strong>Corrections are append-only.</strong> If an attestation proves wrong — or an artifact is exposed as fake — nothing is deleted. A superseding record, signed and anchored, marks the correction. The registry's own mistakes become part of the permanent record; that is a feature, and the only honest option for a system that forbids rewriting. (The same machinery carries the suppression records of Section 9, for legal compliance at the service layer.)</li>
       <li><strong>Post-quantum signatures.</strong> Unlike hashes, today's signature schemes (ECDSA, Ed25519) <em>will</em> fall to quantum computers. Attestations are therefore dual-signed — a classical scheme plus a NIST post-quantum scheme (e.g., ML-DSA) — from early on. And because every signature is anchored, even a future forgery of an old key fails: the forged attestation would carry a post-break anchor date.</li>
       <li><strong>Candidate substrate.</strong> Starling Lab's open-source <a href="https://github.com/starlinglab/authenticated-attributes">Authenticated Attributes</a> — an append-only database of individually signed, timestamped claims keyed to media hashes, with selective disclosure — implements much of this layer already and has been exercised in legal-grade casework (Section 12). Evaluate building on it before writing anything new.</li>
     </ul>
@@ -815,7 +815,7 @@
           <tr><td class="field">attestations</td><td><span class="tag proven">proven</span> signatures over <span class="tag asserted">asserted</span> claims</td><td>Zero or more typed, signed statements (Section 7), each itself anchored.</td></tr>
           <tr><td class="field">relationships</td><td><span class="tag asserted">asserted</span></td><td>Links to other records: digitization of that master; same event, different camera; supersedes/corrects.</td></tr>
           <tr><td class="field">c2pa_manifest_hash</td><td><span class="tag proven">proven</span></td><td>For capture-signed content going forward: hash of the C2PA provenance manifest.</td></tr>
-          <tr><td class="field">content_address</td><td><span class="tag proven">proven</span></td><td>Permanent peer-to-peer addresses for the canonical bytes — IPFS CID and BitTorrent infohash — computed deterministically from the same file the hashes fingerprint, so retrieval identity and verification identity are cryptographically linked. Recorded for every file; resolvable only while someone hosts a copy (see below).</td></tr>
+          <tr><td class="field">content_address</td><td><span class="tag proven">proven</span></td><td>Permanent peer-to-peer addresses for the canonical bytes — IPFS CID and BitTorrent infohash — computed deterministically from the same file the hashes fingerprint, so retrieval identity and verification identity are cryptographically linked. Published in the clear <em>only when redistribution rights are established</em> (public domain, open license, or registrant is the rights holder); otherwise stored as a blinded commitment (see "Rights and the ledger" below). Resolvable only while someone hosts a copy.</td></tr>
           <tr><td class="field">known_locations</td><td><span class="tag asserted">asserted</span></td><td>Ordinary URLs where the file is published today (the holder's own site, an archive's catalog page). Courtesy pointers for discovery — location-addressed, mutable, rot-prone, never load-bearing for verification; refreshed over time via superseding records. Anything fetched from one is checked against the hashes, not trusted from the source.</td></tr>
           <tr><td class="field">perceptual_fingerprints</td><td>advisory only</td><td>Similarity fingerprints for discovery. Explicitly non-cryptographic; never proof.</td></tr>
         </tbody>
@@ -837,7 +837,17 @@
       <li><strong>Paid-permanence networks.</strong> Filecoin (renewable storage deals with on-chain proofs the host still holds the data — where Starling Lab keeps the Shoah testimony archive) and Arweave (a one-time payment into a storage endowment) let a patron gift buy <em>hosting</em> permanence, not just anchoring.</li>
       <li><strong>BitTorrent for the iconic.</strong> Twenty-plus years of demonstrated survival for anything the public cares about, at zero institutional cost.</li>
     </ul>
-    <p>Scope boundaries: this applies in full only to material that may lawfully be redistributed (public domain and licensed collections); copyrighted holdings stay hash-plus-custodian as designed, with the content address recorded anyway — dormant — so preservation can attach to the existing record the day the material enters the public domain. And content addressing does not touch the re-encoding problem (open question 4): a transcode is genuinely different bytes, handled as a related record. It helps only at the margin — when the canonical file is always fetchable at a permanent address, the world has less reason to circulate lossy copies at all.</p>
+    <p>One boundary this does not move: content addressing does not touch the re-encoding problem (open question 4). A transcode is genuinely different bytes, handled as a related record. It helps only at the margin — when the canonical file is always fetchable at a permanent address, the world has less reason to circulate lossy copies at all.</p>
+
+    <h3>Rights and the ledger: content addresses for copyrighted material</h3>
+    <p>Hashes of copyrighted works are legally clean — a fingerprint is not a copy and cannot reconstruct one. Content addresses are a different animal, and the distinction is functional, not cryptographic. A magnet link or CID <em>works as a retrieval mechanism</em>, and courts judge conduct by function: torrent indexes hosting nothing but hashes have been held liable for facilitating infringement (<em>MGM v. Grokster</em>, US Supreme Court 2005, on inducement; <em>Columbia v. Fung</em>, 9th Cir. 2013 — the isoHunt case; the Pirate Bay convictions; in the EU, <em>GS Media</em>, CJEU 2016, reaches even knowing hyperlinks). The "it's just a hash" defense has lost every time it mattered. And a content address is not derivable from our verification hashes — publishing it adds real retrieval capability a record wouldn't otherwise carry. An append-only ledger compounds the exposure: a takedown notice cannot delete an immutable record, and US safe-harbor protection (DMCA §512) is conditioned on the ability to disable access. The design therefore handles rights structurally rather than reactively:</p>
+    <ul>
+      <li><strong>Rights-gated publication.</strong> A record carries its content address in the clear only when redistribution rights are established — public domain, open license, or the registrant is the rights holder. For everything else, the registrant computes the address but submits a <strong>blinded commitment</strong>: a salted hash <em>of</em> the content address. The ledger never contains a usable retrieval pointer, yet nothing future is lost — when the work enters the public domain (or rights are granted), the custodian reveals the address and salt, and anyone can verify the revelation matches the original commitment and its early anchor date. Preservation attaches to the existing record the day it becomes lawful, exactly as before, minus the entire torrent-index fact pattern.</li>
+      <li><strong>Suppression records.</strong> For anything that slips through, the append-only correction machinery of Section 7 extends naturally: a signed suppression record marks the entry, and every registry-operated index, gateway, and verification tool honors it. The raw ledger retains the bytes — future historians can see what was suppressed, by whom, and why, which is itself in mission — while the registry's <em>services</em> comply with notice-and-takedown, preserving §512 safe harbor for the query layer (with a registered DMCA agent as the cheap formality it is).</li>
+      <li><strong>Accountable registrants.</strong> Every record is already signed by a registered identity — structurally the opposite of an anonymous torrent index — and registrant agreements carry rights warranties. For the institutional-only V1 the exposure is nearly theoretical; the gate matters most when individual on-ramps open (open question 5).</li>
+      <li><strong>Designed to consortium comfort, not bare legality.</strong> An archive's general counsel asks "could we be named in a suit," not "would we win it." The conservative gate costs nothing and removes the question.</li>
+    </ul>
+    <p class="footnote">Design-level analysis, not legal advice: the ingestion policy and registrant agreement need review by an IP litigator before the Phase 2 charter is finalized.</p>
   </section>
 
   <section id="seeding">
@@ -986,6 +996,7 @@
       <li><strong>The canonical-file problem.</strong> Most people encounter re-encoded copies that won't hash-match. What's the path from "a copy in my feed" to "the anchored canonical record"?</li>
       <li><strong>Individual registrants.</strong> V1 is institutional. When and how do individuals (journalists, eyewitnesses) register content, and how is spam/poisoning of the ledger priced out without excluding the powerless?</li>
       <li><strong>Legal standing.</strong> What would it take for anchored records and receipts to be recognized as evidence of date-of-existence in court? Concretely: is eIDAS 2.0 "qualified electronic ledger" certification achievable for a consortium ledger, and what would it require of the operators? No court has yet accepted an OpenTimestamps-style proof by name — a first-mover opportunity for a well-run registry.</li>
+      <li><strong>Legal exposure of the ledger itself.</strong> Section 9's rights-gating, blinded commitments, and suppression records are the design-level answer to secondary-liability and takedown risk; an IP litigator must pressure-test them — ingestion policy, registrant agreement, §512 agent, EU (DSA/GS Media) posture — before the Phase 2 charter, and again before individual on-ramps open.</li>
       <li><strong>Funding &amp; permanence.</strong> Endowment sizing for a century of operations; successor stewardship if the founding organization dies (the data survives regardless — who keeps operating?).</li>
       <li><strong>The name.</strong> "The Anchored Record" is a working title.</li>
     </ol>
