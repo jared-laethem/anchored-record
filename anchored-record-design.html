@@ -304,13 +304,13 @@
 <div class="page">
 
   <header class="doc-header">
-    <p class="eyebrow">Design Document · Draft 7</p>
+    <p class="eyebrow">Design Document · Draft 8</p>
     <h1>The Anchored Record</h1>
     <p class="subtitle">A permanent public registry that lets anyone, at any point in the future, verify that a document existed at a known date, unaltered — and see exactly who vouched for it.</p>
     <div class="doc-meta">
       <span>Working name — see open questions</span>
       <span>September 2026</span>
-      <span>Status: concept &amp; architecture · Draft 7 rebuilds the identity &amp; attestation section from zero</span>
+      <span>Status: concept &amp; architecture · Draft 8 splits attestations &amp; relationships into standalone record types</span>
     </div>
   </header>
 
@@ -325,7 +325,7 @@
       <li><span class="n">6</span><a href="#time">Time: anchored vs. asserted dates</a></li>
       <li><span class="n">7</span><a href="#attestation">Identity, accreditation &amp; attestations</a></li>
       <li><span class="n">8</span><a href="#hashes">Hash durability over a century</a></li>
-      <li><span class="n">9</span><a href="#schema">The record schema</a></li>
+      <li><span class="n">9</span><a href="#schema">Record types &amp; schema</a></li>
       <li><span class="n">10</span><a href="#seeding">Seeding the historical record</a></li>
       <li><span class="n">11</span><a href="#nongoals">Deliberate non-goals</a></li>
       <li><span class="n">12</span><a href="#priorart">Prior art &amp; positioning</a></li>
@@ -875,7 +875,8 @@
 
   <section id="schema">
     <p class="eyebrow section-label">Section 9</p>
-    <h2>The record schema (first cut)</h2>
+    <h2>Record types &amp; schema (first cut)</h2>
+    <p>The ledger holds a small family of record types, all sharing one skeleton — signed by an accredited identity, anchored with a proven date, immutable once written. The base type is the <strong>registration record</strong>, created once, when a file enters the registry:</p>
     <div class="table-wrap">
       <table>
         <thead>
@@ -888,8 +889,6 @@
           <tr><td class="field">asserted_created</td><td><span class="tag asserted">asserted</span></td><td>Claimed creation date/time and place, with cited evidence (accession records, broadcast logs, publication data).</td></tr>
           <tr><td class="field">provenance</td><td><span class="tag asserted">asserted</span></td><td>Origin, chain of custody, references into the holding archive's own catalog.</td></tr>
           <tr><td class="field">descriptor</td><td><span class="tag asserted">asserted</span></td><td>Content type, format, duration/dimensions, human-readable description.</td></tr>
-          <tr><td class="field">attestations</td><td><span class="tag proven">proven</span> signatures over <span class="tag asserted">asserted</span> claims</td><td>Zero or more typed, signed statements (Section 7), each itself anchored.</td></tr>
-          <tr><td class="field">relationships</td><td><span class="tag asserted">asserted</span></td><td>Links to other records: digitization of that master; same event, different camera; supersedes/corrects.</td></tr>
           <tr><td class="field">c2pa_manifest_hash</td><td><span class="tag proven">proven</span></td><td>For capture-signed content going forward: hash of the C2PA provenance manifest.</td></tr>
           <tr><td class="field">content_address</td><td><span class="tag proven">proven</span></td><td>Permanent peer-to-peer addresses for the canonical bytes — IPFS CID and BitTorrent infohash — computed deterministically from the same file the hashes fingerprint, so retrieval identity and verification identity are cryptographically linked. Published in the clear <em>only when redistribution rights are established</em> (public domain, open license, or registrant is the rights holder); otherwise stored as a blinded commitment (see "Rights and the ledger" below). Resolvable only while someone hosts a copy.</td></tr>
           <tr><td class="field">known_locations</td><td><span class="tag asserted">asserted</span></td><td>Ordinary URLs where the file is published today (the holder's own site, an archive's catalog page). Courtesy pointers for discovery — location-addressed, mutable, rot-prone, never load-bearing for verification; refreshed over time via superseding records. Anything fetched from one is checked against the hashes, not trusted from the source.</td></tr>
@@ -898,6 +897,14 @@
       </table>
     </div>
     <p class="footnote">Files themselves are never stored or transmitted by the registry — only fingerprints, addresses, and metadata. Custody of the files remains with the source archives, which the consortium model conveniently makes the same institutions keeping the ledger.</p>
+
+    <h3>Attestations and relationships: separate records, attachable forever</h3>
+    <p>Two things deliberately <em>absent</em> from the table above: attestations and relationships. The reason is structural. An anchored record can never be edited — that is the whole point of it — so anything that accumulates over time cannot live inside the record it describes. Both are therefore free-standing record types, joined to their target by the one identifier every party already shares: the content hash.</p>
+    <ul>
+      <li><strong>Attestation records.</strong> <em>Identity X, in role Y, states Z about the file with hash H, on evidence E</em> (Section 7) — a standalone record referencing its target by hash. Three consequences worth spelling out. An attestation carries its <em>own</em> anchor date, so "the Library of Congress attested this in 2031" is permanently distinguishable from "in 2026" — testimony is dated evidence, and its date is proven, not asserted. Independent attesters never coordinate — ten institutions can attest the same file in the same week without touching one another's records or the original registration. And attestation attaches <em>after the fact</em>: an institution can endorse a hash anchored years earlier, with the early anchor date still standing. This is the mechanism behind the build-out plan's sequencing principle (Section 14) — anchor unilaterally now; let institutional testimony arrive later.</li>
+      <li><strong>Relationship records.</strong> A typed, signed link between two hashes: <em>digitization of that master</em>; <em>same event, different camera</em>; <em>transcode of the canonical file</em> (the re-encoding problem's honest home); <em>supersedes / corrects</em>. Relationships are often discovered long after registration — by a researcher connecting two archives' holdings, not by either registrant — so they too are attachable by any accredited identity, at any time, with the link's credibility legible from who signed it. A disputed relationship is answered the ledger's only way: a counter-record, signed and anchored.</li>
+    </ul>
+    <p>The full taxonomy, then: <strong>registration</strong> (the table above), <strong>attestation</strong>, <strong>relationship</strong>, <strong>correction / supersession</strong> (Section 7), <strong>suppression</strong> (below), and the <strong>identity records</strong> — issuance, rotation, revocation — of Section 7.2. A verifier assembles the complete dossier for a file by gathering every record that references its hash: the hash is the join key that lets a thousand independent voices speak about one artifact without ever sharing a pen.</p>
 
     <h3>Preservation without custody: the hash is the address</h3>
     <p>A registry of hashes has an obvious dependency: a fingerprint is only useful while someone, somewhere, still holds a matching file. If the last copy disappears — or merely gets re-encoded everywhere — the anchor points at nothing. The registry never takes custody of files, but it can make their survival dramatically more likely, because of a property of peer-to-peer networks that fits this design like a glove: <strong>on content-addressed networks, the hash <em>is</em> the address.</strong></p>
