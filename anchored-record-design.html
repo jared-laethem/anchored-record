@@ -304,13 +304,13 @@
 <div class="page">
 
   <header class="doc-header">
-    <p class="eyebrow">Design Document · Draft 6</p>
+    <p class="eyebrow">Design Document · Draft 7</p>
     <h1>The Anchored Record</h1>
     <p class="subtitle">A permanent public registry that lets anyone, at any point in the future, verify that a document existed at a known date, unaltered — and see exactly who vouched for it.</p>
     <div class="doc-meta">
       <span>Working name — see open questions</span>
       <span>September 2026</span>
-      <span>Status: concept &amp; architecture · Draft 6 adds rights-gating &amp; takedown design for content addresses</span>
+      <span>Status: concept &amp; architecture · Draft 7 rebuilds the identity &amp; attestation section from zero</span>
     </div>
   </header>
 
@@ -323,7 +323,7 @@
       <li><span class="n">4</span><a href="#anchoring">The anchoring mechanism, end to end</a></li>
       <li><span class="n">5</span><a href="#network">Our network: the registry ledger</a></li>
       <li><span class="n">6</span><a href="#time">Time: anchored vs. asserted dates</a></li>
-      <li><span class="n">7</span><a href="#attestation">Identity &amp; attestations</a></li>
+      <li><span class="n">7</span><a href="#attestation">Identity, accreditation &amp; attestations</a></li>
       <li><span class="n">8</span><a href="#hashes">Hash durability over a century</a></li>
       <li><span class="n">9</span><a href="#schema">The record schema</a></li>
       <li><span class="n">10</span><a href="#seeding">Seeding the historical record</a></li>
@@ -627,6 +627,10 @@
     <p class="eyebrow section-label">Section 5</p>
     <h2>Our network: the registry ledger</h2>
     <p>Bitcoin gives us unrewritability but only 80 bytes an hour. The registry itself — full records, metadata, attestations, receipts — lives on our own ledger, and its design goal is different: not to win a security arms race (the anchors handle that), but to be <strong>rich, replicated, and governable</strong>.</p>
+    <div class="aside">
+      <span class="aside-label">What to call it</span>
+      <p>Vocabulary used from here on: the <strong>registry</strong> is the institution and public service as a whole — the thing patrons fund and courts cite. The <strong>ledger</strong> is the data structure underneath: append-only, block-chained, replicated in full at every member node. Technically the ledger is a blockchain; we don't lean on the word, because it imports connotations (coins, speculation) the design deliberately excludes. The defining property is <strong>write-permissioned, read-public</strong>: accreditation is required to write (Section 7.3), and nothing is required — of anyone, ever — to read, mirror, or verify.</p>
+    </div>
 
     <figure>
       <div class="fig-frame">
@@ -765,11 +769,83 @@
 
   <section id="attestation">
     <p class="eyebrow section-label">Section 7</p>
-    <h2>Identity &amp; attestations</h2>
-    <p>The integrity layer answers "is this unaltered and how old is it." Attestations answer "why should I believe it's what it claims to be." An attestation is a small signed statement, itself a ledger record (and therefore anchored): <em>identity X, in role Y, states Z about record R, on evidence E.</em></p>
+    <h2>Identity, accreditation &amp; attestations</h2>
+    <p>The integrity layer answers "is this unaltered and how old is it." Attestations answer "why should I believe it's what it claims to be." An attestation is a small signed statement, itself a ledger record (and therefore anchored): <em>identity X, in role Y, states Z about record R, on evidence E.</em> Every load-bearing word in that sentence rests on one more cryptographic tool, introduced here from zero — and on procedures for granting, checking, and revoking the right to speak.</p>
+
+    <h3>7.1 — Signatures: a seal only one party can press, anyone can check</h3>
+    <p>A digital signature system gives each participant two mathematically linked items: a <strong>signing key</strong>, kept secret, and a <strong>verification key</strong>, published to the whole world. Picture the signing key as a one-of-a-kind seal press, and the verification key as a special lens — copied freely, handed to everyone — that recognizes seals from exactly that press.</p>
+    <p>The press has a property no physical seal has: <strong>it never stamps the same mark twice on different documents.</strong> The seal is computed from the secret key <em>and</em> the exact content being signed (its fingerprint, in the Section 3 sense). Change one comma in the document and the correct seal for it becomes completely different — so a genuine seal cannot be peeled off one document and pasted onto another. Anyone holding the public lens can then confirm two things at once: this seal was made by <em>that</em> press, and it was pressed on <em>exactly this</em> document.</p>
+    <p>Could a forger produce a seal the lens accepts without holding the press? That is computationally infeasible in the same absolute sense as the brute-force numbers of Section 8 — this is the mathematics protecting every online banking session on earth. Which leaves the consequence that drives the rest of this section: <strong>whoever holds the signing key can speak as that identity.</strong> The math makes seals unforgeable; it says nothing about who is holding the press. Key custody — how keys are issued, bound to names, and revoked — is where the real design work lives.</p>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 880 320" role="img" aria-label="Signing: a document's fingerprint plus the secret signing key produce a signature unique to both. Verifying: anyone with the public verification key confirms the signature matches that key and this exact document; an altered document fails the check.">
+          <defs>
+            <marker id="arwSg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+            <marker id="arwSb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--bronze)"/>
+            </marker>
+          </defs>
+          <!-- Signing row -->
+          <text class="d-text" x="40" y="34" font-weight="600">Signing — requires the secret</text>
+          <rect class="d-box" x="40" y="52" width="120" height="44"/>
+          <text class="d-text" x="100" y="78" text-anchor="middle">document</text>
+          <line class="d-line" x1="160" y1="74" x2="222" y2="74" marker-end="url(#arwSg)"/>
+          <text class="d-text-sm" x="191" y="64" text-anchor="middle">hash</text>
+          <rect class="d-box" x="222" y="52" width="112" height="44"/>
+          <text class="d-text" x="278" y="78" text-anchor="middle">fingerprint</text>
+          <rect class="d-bronze-box" x="222" y="122" width="112" height="44"/>
+          <text class="d-text d-bronze-t" x="278" y="141" text-anchor="middle">signing key</text>
+          <text class="d-text-sm" x="278" y="157" text-anchor="middle">secret — the press</text>
+          <line class="d-line" x1="334" y1="74" x2="398" y2="96" marker-end="url(#arwSg)"/>
+          <line class="d-line-bronze" x1="334" y1="144" x2="398" y2="118" marker-end="url(#arwSb)"/>
+          <rect class="d-accent-box" x="398" y="84" width="150" height="48"/>
+          <text class="d-text d-accent-t" x="473" y="104" text-anchor="middle" font-weight="600">signature</text>
+          <text class="d-text-sm" x="473" y="120" text-anchor="middle">unique to key + document</text>
+          <!-- Verifying rows -->
+          <text class="d-text" x="40" y="212" font-weight="600">Checking — public, no secret needed</text>
+          <rect class="d-box" x="40" y="228" width="176" height="40"/>
+          <text class="d-text" x="128" y="252" text-anchor="middle">document + signature</text>
+          <rect class="d-box" x="248" y="228" width="150" height="40"/>
+          <text class="d-text" x="323" y="245" text-anchor="middle">verification key</text>
+          <text class="d-text-sm" x="323" y="260" text-anchor="middle">public — the lens</text>
+          <line class="d-line" x1="216" y1="248" x2="248" y2="248"/>
+          <line class="d-line" x1="398" y1="248" x2="460" y2="248" marker-end="url(#arwSg)"/>
+          <text class="d-text d-accent-t" x="472" y="245" font-weight="600">✓ made by that key,</text>
+          <text class="d-text d-accent-t" x="472" y="261" font-weight="600">on exactly this document</text>
+          <line class="d-line-muted d-dash" x1="128" y1="268" x2="128" y2="296"/>
+          <text class="d-text-sm d-danger-t" x="142" y="300">one comma changed → ✗ the seal no longer matches</text>
+        </svg>
+      </div>
+      <figcaption><span class="fig-n">Figure 5</span>A signature binds a secret key to an exact document. Verification needs no secrets — only the public key — so anyone, forever, can check who signed what.</figcaption>
+    </figure>
+
+    <h3>7.2 — Certificates: who does this key belong to?</h3>
+    <p>The lens tells you <em>which press</em> made a seal. It cannot tell you <em>who owns the press</em>. That gap is the real impersonation surface: the practical attack is never forging the Library of Congress's seal — the math forbids it — but showing up with a brand-new press and announcing "this press belongs to the Library of Congress."</p>
+    <p>The defense is a statement, itself sealed, about someone else's key: <em>"We, the undersigned, have verified that this verification key belongs to the Library of Congress."</em> A sealed statement about a key is called a <strong>certificate</strong> — you believe it because you already know the keys of those who signed it, so trust flows from keys you know to keys you don't. (This is exactly how the padlock in a web browser works: a few hundred "certificate authorities," whose keys ship inside the browser, sign certificates for millions of websites. Our problem is the same shape but vastly smaller — dozens of institutions rather than millions of sites — so we can afford far heavier verification per identity than any web authority.)</p>
+    <p>In the registry, the certificate is the <strong>identity record</strong>, created by a deliberately slow <strong>key ceremony</strong>: several existing consortium members independently confirm, through official out-of-band channels — legal registrations, verified institutional contacts, a passport-office procedure — that the applicant institution really controls the key being registered. Each verifying member co-signs the identity record, and the record is anchored like everything else. An impersonator would therefore need to fool multiple independent institutions simultaneously, through official channels; and were it ever to happen, the fraudulent identity record would be permanently attributable to the members who co-signed it, with their reputations as the collateral. Institutions additionally publish their verification keys through channels the registry does not control — their own websites and official publications — giving any verifier an independent cross-check on the binding.</p>
+
+    <h3>7.3 — The contribution ladder: who may do what</h3>
+    <p>Participation forms a ladder of increasing trust, and the registry's defining rule (Section 5) runs through it: permission is required to speak <em>into</em> the record, never to check it.</p>
     <ul>
-      <li><strong>Identities</strong> are cryptographic keys bound to named entities — primarily institutions at first, whose reputations are the collateral. The registry maintains an identity ledger: key issuance, rotation, and revocation are themselves anchored records, so "who was authorized to speak for the AP in 2026" is permanently answerable.</li>
-      <li><strong>Roles</strong> are typed, not freeform: <em>originating archive</em>, <em>digitizer</em>, <em>independent holder of a matching copy</em>, <em>eyewitness</em>, <em>publication of record</em>. A record's credibility is legible from who signed in which role.</li>
+      <li><strong>Verify, mirror, host — everyone.</strong> No permission, no account, forever. Anyone can check receipts against the public chains, hold a complete copy of the ledger, or pin registered files. This layer being permissionless is what makes the registry censorship-resistant.</li>
+      <li><strong>Register records — accredited institutions (V1).</strong> Accreditation runs through the consortium: sponsorship by an existing member, vetting against charter criteria (legal existence, archival mission, custody practices), admission by vote, then the key ceremony of 7.2. Members can delegate accreditation — a national library association vouching for its member libraries — so the registrant pool scales without every archive petitioning the founding board. Individual registrants come later (open question 5): open registration is also the spam-and-poisoning surface, so it waits for its own vetting and pricing design.</li>
+      <li><strong>Attest — accredited identities, in typed roles.</strong> Roles are typed, not freeform: <em>originating archive</em>, <em>digitizer</em>, <em>independent holder of a matching copy</em>, <em>eyewitness</em>, <em>publication of record</em>. A record's credibility is legible from who signed in which role, and a weak attestation cannot masquerade as a strong one.</li>
+      <li><strong>Co-sign blocks — consortium members only.</strong> The 10–50 node-operating institutions of Section 5, admitted by charter supermajority.</li>
+    </ul>
+
+    <h3>7.4 — When keys go wrong</h3>
+    <ul>
+      <li><strong>Stolen key → anchored revocation.</strong> A revocation record ends a key's authority at a proven moment. Because every signature carries its anchor date, anything a thief signs is provably signed <em>after</em> the theft — and nothing can be backdated to before it. Section 6's wall protects identities exactly as it protects documents.</li>
+      <li><strong>Rogue insider → threshold keys.</strong> An institution's signing authority is split so a valid seal requires several officers acting together (say, 3 of 5). No single employee can speak for the institution.</li>
+      <li><strong>Routine hygiene → rotation records.</strong> Keys retire and are replaced on schedule, each change an anchored record — so "which keys could speak for the AP in 2026" stays permanently answerable, which is precisely what a verifier in 2080 needs.</li>
+      <li><strong>The honest residual.</strong> Cryptography makes impersonation infeasible and misuse attributable; it cannot make institutions honest. If an archive's own leadership signs a false attestation, that is not an identity failure — it is the reputation-staking layer working as designed: the lie is permanent, signed, and attributable to them forever.</li>
+    </ul>
+
+    <h3>Further properties</h3>
+    <ul>
       <li><strong>Corrections are append-only.</strong> If an attestation proves wrong — or an artifact is exposed as fake — nothing is deleted. A superseding record, signed and anchored, marks the correction. The registry's own mistakes become part of the permanent record; that is a feature, and the only honest option for a system that forbids rewriting. (The same machinery carries the suppression records of Section 9, for legal compliance at the service layer.)</li>
       <li><strong>Post-quantum signatures.</strong> Unlike hashes, today's signature schemes (ECDSA, Ed25519) <em>will</em> fall to quantum computers. Attestations are therefore dual-signed — a classical scheme plus a NIST post-quantum scheme (e.g., ML-DSA) — from early on. And because every signature is anchored, even a future forgery of an old key fails: the forged attestation would carry a post-break anchor date.</li>
       <li><strong>Candidate substrate.</strong> Starling Lab's open-source <a href="https://github.com/starlinglab/authenticated-attributes">Authenticated Attributes</a> — an append-only database of individually signed, timestamped claims keyed to media hashes, with selective disclosure — implements much of this layer already and has been exercised in legal-grade casework (Section 12). Evaluate building on it before writing anything new.</li>
@@ -1021,6 +1097,12 @@
       <dt>C2PA</dt><dd>Industry standard for capture-time provenance — cameras and tools cryptographically signing content at creation.</dd>
       <dt>Content address</dt><dd>A peer-to-peer identifier derived from a file's content (an IPFS CID, a BitTorrent magnet link): it names <em>what</em> the file is rather than where it lives, resolves wherever a copy is hosted, and cannot serve tampered bytes.</dd>
       <dt>Pinning</dt><dd>Committing to keep hosting a file at its content address. Addresses are permanent; availability lasts only as long as someone pins.</dd>
+      <dt>Signing / verification key</dt><dd>The two halves of a signature system: the secret half presses seals, the public half — given to everyone — recognizes them. Holding the secret half is what it means to "be" an identity on the ledger.</dd>
+      <dt>Digital signature</dt><dd>A seal computed from a secret key and the exact document signed — different for every document, checkable by anyone with the public key, infeasible to forge without the secret.</dd>
+      <dt>Certificate / identity record</dt><dd>A signed statement binding a verification key to a named entity ("this key belongs to the Library of Congress"), co-signed by parties whose keys are already known.</dd>
+      <dt>Key ceremony</dt><dd>The deliberately slow procedure in which multiple consortium members independently verify, out-of-band, that an institution controls a key before co-signing its identity record.</dd>
+      <dt>Threshold key</dt><dd>Signing authority split among several officers so a valid seal requires m of n acting together; no single insider can speak for the institution.</dd>
+      <dt>Revocation</dt><dd>An anchored record ending a key's authority at a proven moment; anything the key signs afterward is provably post-revocation.</dd>
     </dl>
   </section>
 
