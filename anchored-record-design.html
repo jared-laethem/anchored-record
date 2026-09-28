@@ -304,13 +304,13 @@
 <div class="page">
 
   <header class="doc-header">
-    <p class="eyebrow">Design Document · Draft 8</p>
+    <p class="eyebrow">Design Document · Draft 9</p>
     <h1>The Anchored Record</h1>
     <p class="subtitle">A permanent public registry that lets anyone, at any point in the future, verify that a document existed at a known date, unaltered — and see exactly who vouched for it.</p>
     <div class="doc-meta">
       <span>Working name — see open questions</span>
       <span>September 2026</span>
-      <span>Status: concept &amp; architecture · Draft 8 splits attestations &amp; relationships into standalone record types</span>
+      <span>Status: concept &amp; architecture · Draft 9 adds provisional (volunteer) registrants for the bootstrap era</span>
     </div>
   </header>
 
@@ -831,7 +831,8 @@
     <p>Participation forms a ladder of increasing trust, and the registry's defining rule (Section 5) runs through it: permission is required to speak <em>into</em> the record, never to check it.</p>
     <ul>
       <li><strong>Verify, mirror, host — everyone.</strong> No permission, no account, forever. Anyone can check receipts against the public chains, hold a complete copy of the ledger, or pin registered files. This layer being permissionless is what makes the registry censorship-resistant.</li>
-      <li><strong>Register records — accredited institutions (V1).</strong> Accreditation runs through the consortium: sponsorship by an existing member, vetting against charter criteria (legal existence, archival mission, custody practices), admission by vote, then the key ceremony of 7.2. Members can delegate accreditation — a national library association vouching for its member libraries — so the registrant pool scales without every archive petitioning the founding board. Individual registrants come later (open question 5): open registration is also the spam-and-poisoning surface, so it waits for its own vetting and pricing design.</li>
+      <li><strong>Register records — accredited institutions.</strong> Accreditation runs through the consortium: sponsorship by an existing member, vetting against charter criteria (legal existence, archival mission, custody practices), admission by vote, then the key ceremony of 7.2. Members can delegate accreditation — a national library association vouching for its member libraries — so the registrant pool scales without every archive petitioning the founding board.</li>
+      <li><strong>Register records — provisional registrants (the bootstrap rung).</strong> A registry waiting for institutions to move first would repeat ARCHANGEL's fate, so the ladder includes a lighter rung from day one: volunteers, identity-verified and sponsored by the founding organization or a member, accredited for a <em>named scope</em> ("registrant for the Prelinger film archive") with rate limits. Their registrations are typed for what they are — <em>third-party registrant</em>, not custodian — so seeded records never masquerade as institutional testimony; and because every record is signed, each volunteer's work is auditable as a body, and a bad actor's accreditation is revocable, leaving their permanent records visibly signed by a revoked identity — a built-in warning label. Volunteer registrations are substrate, not clutter: when the custodial institution later attests the same hashes (Section 9), the early anchor dates are already in place. Fully open individual registration remains a separate, harder problem (open question 5).</li>
       <li><strong>Attest — accredited identities, in typed roles.</strong> Roles are typed, not freeform: <em>originating archive</em>, <em>digitizer</em>, <em>independent holder of a matching copy</em>, <em>eyewitness</em>, <em>publication of record</em>. A record's credibility is legible from who signed in which role, and a weak attestation cannot masquerade as a strong one.</li>
       <li><strong>Co-sign blocks — consortium members only.</strong> The 10–50 node-operating institutions of Section 5, admitted by charter supermajority.</li>
     </ul>
@@ -1042,6 +1043,8 @@
       <li><strong>Anchor the Internet Archive's published metadata.</strong> IA publishes per-file hashes through its public API; anchoring those manifests fences the <em>claimed contents</em> of restricted collections (the September 11 Television Archive included) behind the wall at zero cost — a weaker guarantee (self-reported, older algorithms), held honestly as such, while the custodial pilot is courted.</li>
     </ol>
 
+    <p><strong>The volunteer multiplier.</strong> Phase 0 need not stay solo: the provisional-registrant rung (Section 7.3) turns mission-aligned volunteers into a bootstrap workforce — each sponsored, scoped to a named open collection (Internet Archive public-domain holdings, Wikimedia Commons, government archives), and rate-limited. An empty registry is the hardest thing to join; a registry visibly filling with signed, scoped, honestly-labeled third-party registrations is a moving train. Every volunteer-anchored hash is substrate the eventual custodian upgrades with attestation rather than work redone — and volunteers double as the project's first community.</p>
+
     <h3>Phase 1 — First partners (one institution, one patron)</h3>
     <ol class="body-list">
       <li><strong>The ARCHANGEL post-mortem</strong> (open question 1) — before any pitch, learn why five national archives let a working trial lapse; its participants are also warm leads.</li>
@@ -1077,7 +1080,7 @@
       <li><strong>Attestation trust UX.</strong> How does a skeptical citizen in 2080 <em>read</em> a web of institutional signatures without simply being told "trust these institutions"? Reputation surfacing, competing attestations, and dispute records need design.</li>
       <li><strong>Verification experience.</strong> The cryptography allows trustless verification; the tooling must make it a one-click act for a non-technical person, including offline.</li>
       <li><strong>The canonical-file problem.</strong> Most people encounter re-encoded copies that won't hash-match. What's the path from "a copy in my feed" to "the anchored canonical record"?</li>
-      <li><strong>Individual registrants.</strong> V1 is institutional. When and how do individuals (journalists, eyewitnesses) register content, and how is spam/poisoning of the ledger priced out without excluding the powerless?</li>
+      <li><strong>Individual registrants — two problems, not one.</strong> Provisional volunteers are handled now (Section 7.3: sponsored, scoped, rate-limited). Fully <em>open</em> registration — journalists, eyewitnesses, anyone — remains deferred: how is spam/poisoning of the ledger priced out without excluding the powerless?</li>
       <li><strong>Legal standing.</strong> What would it take for anchored records and receipts to be recognized as evidence of date-of-existence in court? Concretely: is eIDAS 2.0 "qualified electronic ledger" certification achievable for a consortium ledger, and what would it require of the operators? No court has yet accepted an OpenTimestamps-style proof by name — a first-mover opportunity for a well-run registry.</li>
       <li><strong>Legal exposure of the ledger itself.</strong> Section 9's rights-gating, blinded commitments, and suppression records are the design-level answer to secondary-liability and takedown risk; an IP litigator must pressure-test them — ingestion policy, registrant agreement, §512 agent, EU (DSA/GS Media) posture — before the Phase 2 charter, and again before individual on-ramps open.</li>
       <li><strong>Funding &amp; permanence.</strong> Endowment sizing for a century of operations; successor stewardship if the founding organization dies (the data survives regardless — who keeps operating?).</li>
